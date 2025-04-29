@@ -1,5 +1,6 @@
 package com.team.webkit.backend.api.member;
 
+import com.team.webkit.backend.config.JwtUtil;
 import com.team.webkit.backend.support.MspUtil;
 import com.team.webkit.backend.support.annotation.MSP;
 import com.team.webkit.backend.support.protocol.MspResult;
@@ -8,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class MemberController {
 
     private final MemberService memberService;
+
+    private final JwtUtil jwtUtil;
 
     // 회원가입
     @PostMapping("/join")
@@ -58,54 +62,20 @@ public class MemberController {
 
     // 회원탈퇴
     @PostMapping("/out")
-    public ResponseEntity<MspResult> out(@RequestBody Map<String, String> request) {
-        String loginId = request.get("loginId");
+    public ResponseEntity<MspResult> out() {
+        Integer id = (Integer) SecurityContextHolder.getContext().getAuthentication()
+            .getPrincipal();
 
         Map<String, String> body = new LinkedHashMap<>();
 
-        if (loginId.isEmpty()) {
-            body.put("rsltCode", "1001");
-            body.put("rsltMsg", "필수값 누락");
+        boolean isDelete = memberService.out(id);
+
+        if (isDelete) {
+            body.put("rsltCode", "0000");
+            body.put("rsltMsg", "회원탈퇴 성공");
         } else {
-            boolean isDelete = memberService.out(loginId);
-
-            if (isDelete) {
-                body.put("rsltCode", "0000");
-                body.put("rsltMsg", "회원탈퇴 성공");
-            } else {
-                body.put("rsltCode", "2003");
-                body.put("rsltMsg", "존재하지 않는 회원입니다.");
-            }
-        }
-
-        MspResult result = MspUtil.makeResult(MspStatus.OK, body);
-
-        return ResponseEntity.ok(result);
-    }
-
-    // 회원정보 수정
-    @PostMapping("/update")
-    public ResponseEntity<MspResult> update(@RequestBody Map<String, String> request) {
-        String loginId = request.get("loginId");
-        String password = request.get("password");
-        String nickname = request.get("nickname");
-        String phone = request.get("phone");
-
-        Map<String, String> body = new LinkedHashMap<>();
-
-        if (loginId.isEmpty() || password.isEmpty() || phone.isEmpty()) {
-            body.put("rsltCode", "1001");
-            body.put("rsltMsg", "필수값 누락");
-        } else {
-            boolean isUpdate = memberService.update(loginId, password, nickname, phone);
-
-            if (isUpdate) {
-                body.put("rsltCode", "0000");
-                body.put("rsltMsg", "회원정보 수정 성공");
-            } else {
-                body.put("rsltCode", "2003");
-                body.put("rsltMsg", "존재하지 않는 회원입니다.");
-            }
+            body.put("rsltCode", "2003");
+            body.put("rsltMsg", "존재하지 않는 회원입니다.");
         }
 
         MspResult result = MspUtil.makeResult(MspStatus.OK, body);
@@ -125,12 +95,15 @@ public class MemberController {
             body.put("rsltCode", "1001");
             body.put("rsltMsg", "필수값 누락");
         } else {
-            String resultCode = memberService.login(loginId, password);
-            body.put("rsltCode", resultCode);
+            Member member = memberService.login(loginId, password);
 
-            if (resultCode.equals("0000")) {
+            if (member != null) {
+                String token = jwtUtil.createAccessToken(member);
+                body.put("rsltCode", "0000");
                 body.put("rsltMsg", "로그인 성공");
-            } else if (resultCode.equals("2001")) {
+                body.put("accessToken", token);
+            } else {
+                body.put("rsltCode", "2001");
                 body.put("rsltMsg", "아이디 혹은 비밀번호가 맞지 않습니다.");
             }
 
@@ -143,19 +116,17 @@ public class MemberController {
 
     // 로그아웃
     @PostMapping("/logout")
-    public ResponseEntity<MspResult> logout(@RequestBody Map<String, String> request) {
-        String loginId = request.get("loginId");
-
-        String resultCode = memberService.logout(loginId);
-
+    public ResponseEntity<MspResult> logout() {
         Map<String, String> body = new LinkedHashMap<>();
-        body.put("rsltCode", resultCode);
+
+        body.put("rsltCode", "0000");
         body.put("rsltMsg", "로그아웃 성공");
 
         MspResult result = MspUtil.makeResult(MspStatus.OK, body);
 
         return ResponseEntity.ok(result);
     }
+
 
     // 아이디 중복 검사
     @PostMapping("/duplicate")
@@ -174,75 +145,15 @@ public class MemberController {
 
             if (resultCode.equals("0000")) {
                 body.put("rsltMsg", "이메일 중복 아님");
+                body.put("dupYn", "N");
             } else if (resultCode.equals("2002")) {
                 body.put("rsltMsg", "이메일 중복");
+                body.put("dupYn", "Y");
             }
 
         }
 
         MspResult result = MspUtil.makeResult(MspStatus.OK, body);
-
-        return ResponseEntity.ok(result);
-    }
-
-    // 회원정보 조회
-    @PostMapping("/info")
-    public ResponseEntity<MspResult> info(@RequestBody Map<String, String> request) {
-        String loginId = request.get("loginId");
-
-        Map<String, String> body = new LinkedHashMap<>();
-
-        if (loginId.isEmpty()) {
-            body.put("rsltCode", "1001");
-            body.put("rsltMsg", "필수값 누락");
-        } else {
-            Member member = memberService.info(loginId);
-
-            if (member != null) {
-                body.put("rsltCode", "0000");
-                body.put("rsltMsg", "회원이 존재합니다.");
-                body.put("loginId", member.getLoginId());
-                body.put("nickname", member.getNickname());
-                body.put("phone", member.getPhone());
-            } else {
-                body.put("rsltCode", "2003");
-                body.put("rsltMsg", "회원이 존재하지 않습니다.");
-            }
-        }
-
-        MspResult result = MspUtil.makeResult(MspStatus.OK, body);
-
-        return ResponseEntity.ok(result);
-    }
-
-    // 개인정보 확인 (존재 여부)
-    @PostMapping("/find")
-    public ResponseEntity<MspResult> find(@RequestBody Member member) {
-        MspResult result;
-
-        Map<String, String> body = new LinkedHashMap<>();
-
-        if (member.getLoginId().isEmpty() || member.getPhone()
-            .isEmpty() || member.getNickname().isEmpty()) {
-            body.put("rsltCode", "1001");
-            body.put("rsltMsg", "필수값 누락");
-        } else {
-            boolean isExist = memberService.find(member.getLoginId(), member.getPhone(),
-                member.getNickname());
-
-            if (isExist) {
-                body.put("rsltCode", "0000");
-                body.put("rsltMsg", "회원이 존재합니다.");
-                body.put("existYn", "Y");
-            } else {
-                body.put("rsltCode", "2003");
-                body.put("rsltMsg", "회원이 존재하지 않습니다.");
-                body.put("existYn", "N");
-            }
-
-        }
-
-        result = MspUtil.makeResult(MspStatus.OK, body);
 
         return ResponseEntity.ok(result);
     }
@@ -251,6 +162,7 @@ public class MemberController {
     @PostMapping("/findId")
     public ResponseEntity<MspResult> findId(@RequestBody Map<String, String> request) {
         String phone = request.get("phone");
+
         String loginId = memberService.findId(phone);
 
         Map<String, String> body = new LinkedHashMap<>();
@@ -301,19 +213,21 @@ public class MemberController {
     // 비밀번호 수정
     @PostMapping("/password")
     public ResponseEntity<MspResult> password(@RequestBody Map<String, String> request) {
-        String loginId = request.get("loginId");
+        Integer id = (Integer) SecurityContextHolder.getContext().getAuthentication()
+            .getPrincipal();
+
         String password = request.get("password");
 
         Map<String, String> body = new LinkedHashMap<>();
 
-        if (loginId.isEmpty() || password.isEmpty()) {
+        if (password.isEmpty()) {
             body.put("rsltCode", "1001");
             body.put("rsltMsg", "필수값 누락");
         } else if (!isValidPassword(password)) {
             body.put("rsltCode", "1002");
             body.put("rsltMsg", "비밀번호 형식이 올바르지 않습니다.");
         } else {
-            boolean isUpdate = memberService.password(loginId, password);
+            boolean isUpdate = memberService.password(id, password);
 
             if (isUpdate) {
                 body.put("rsltCode", "0000");
@@ -329,6 +243,132 @@ public class MemberController {
         return ResponseEntity.ok(result);
     }
 
+
+    // 닉네임 중복 검사
+    @PostMapping("/duplicate/nickname")
+    public ResponseEntity<MspResult> duplicateNickname(@RequestBody Map<String, String> request) {
+        String nickname = request.get("nickname");
+
+        Map<String, String> body = new LinkedHashMap<>();
+
+        if (nickname.isEmpty()) {
+            body.put("rsltCode", "1001");
+            body.put("rsltMsg", "필수값 누락");
+        } else {
+            String resultCode = memberService.duplicateNickname(nickname);
+
+            body.put("rsltCode", resultCode);
+
+            if (resultCode.equals("0000")) {
+                body.put("rsltMsg", "닉네임 중복 아님");
+                body.put("dupYn", "N");
+            } else if (resultCode.equals("2002")) {
+                body.put("rsltMsg", "닉네임 중복");
+                body.put("dupYn", "Y");
+            }
+        }
+
+        MspResult result = MspUtil.makeResult(MspStatus.OK, body);
+
+        return ResponseEntity.ok(result);
+    }
+
+    // 회원정보 조회
+    @PostMapping("/info")
+    public ResponseEntity<MspResult> info(@RequestBody Map<String, String> request) {
+        String loginId = request.get("loginId");
+
+        Map<String, String> body = new LinkedHashMap<>();
+
+        if (loginId.isEmpty()) {
+            body.put("rsltCode", "1001");
+            body.put("rsltMsg", "필수값 누락");
+        } else {
+            Member member = memberService.info(loginId);
+
+            if (member != null) {
+                body.put("rsltCode", "0000");
+                body.put("rsltMsg", "회원이 존재합니다.");
+                body.put("loginId", member.getLoginId());
+                body.put("nickname", member.getNickname());
+                body.put("phone", member.getPhone());
+            } else {
+                body.put("rsltCode", "2003");
+                body.put("rsltMsg", "회원이 존재하지 않습니다.");
+            }
+        }
+
+        MspResult result = MspUtil.makeResult(MspStatus.OK, body);
+
+        return ResponseEntity.ok(result);
+    }
+
+
+    // 회원정보 수정
+    @PostMapping("/update")
+    public ResponseEntity<MspResult> update(@RequestBody Map<String, String> request) {
+        Integer id = (Integer) SecurityContextHolder.getContext().getAuthentication()
+            .getPrincipal();
+
+        String nickname = request.get("nickname");
+        String phone = request.get("phone");
+
+        Map<String, String> body = new LinkedHashMap<>();
+
+        if (nickname.isEmpty() || phone.isEmpty()) {
+            body.put("rsltCode", "1001");
+            body.put("rsltMsg", "필수값 누락");
+        } else {
+            boolean isUpdate = memberService.update(id, nickname, phone);
+
+            if (isUpdate) {
+                body.put("rsltCode", "0000");
+                body.put("rsltMsg", "회원정보 수정 성공");
+            } else {
+                body.put("rsltCode", "2003");
+                body.put("rsltMsg", "존재하지 않는 회원입니다.");
+            }
+        }
+
+        MspResult result = MspUtil.makeResult(MspStatus.OK, body);
+
+        return ResponseEntity.ok(result);
+    }
+
+
+    // 개인정보 확인 (존재 여부)
+    @PostMapping("/find")
+    public ResponseEntity<MspResult> find(@RequestBody Member member) {
+        MspResult result;
+
+        Map<String, String> body = new LinkedHashMap<>();
+
+        if (member.getLoginId().isEmpty() || member.getPhone()
+            .isEmpty() || member.getNickname().isEmpty()) {
+            body.put("rsltCode", "1001");
+            body.put("rsltMsg", "필수값 누락");
+        } else {
+            boolean isExist = memberService.find(member.getLoginId(), member.getPhone(),
+                member.getNickname());
+
+            if (isExist) {
+                body.put("rsltCode", "0000");
+                body.put("rsltMsg", "회원이 존재합니다.");
+                body.put("existYn", "Y");
+            } else {
+                body.put("rsltCode", "2003");
+                body.put("rsltMsg", "회원이 존재하지 않습니다.");
+                body.put("existYn", "N");
+            }
+
+        }
+
+        result = MspUtil.makeResult(MspStatus.OK, body);
+
+        return ResponseEntity.ok(result);
+    }
+
+
     // 아이디 유효성 (총 5자 이상)
     private boolean isValidLoginId(String loginId) {
         return loginId != null && loginId.length() >= 5 && !loginId.contains(" ");
@@ -340,5 +380,6 @@ public class MemberController {
 
         return password.matches(regex);
     }
+
 
 }
