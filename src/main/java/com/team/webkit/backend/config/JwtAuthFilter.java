@@ -1,5 +1,6 @@
 package com.team.webkit.backend.config;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,34 +20,48 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+    protected void doFilterInternal(HttpServletRequest request,
+        HttpServletResponse response,
         FilterChain filterChain) throws ServletException, IOException {
 
         String token = resolveToken(request);
 
-        // 검증 성공 시, userId 꺼냄
-        if (token != null && jwtUtil.validateToken(token)) {
-            Integer userId = jwtUtil.getUserId(token);
+        try {
+            if (token != null) {
+                jwtUtil.validateOrThrow(token); // 여기서 예외 발생 시 아래 catch로 감
 
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                userId, null, null);
+                Integer userId = jwtUtil.getUserId(token);
+                UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(userId, null, null);
+                authentication.setDetails(
+                    new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
 
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            filterChain.doFilter(request, response);
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+        } catch (ExpiredJwtException e) {
+            sendError(response, "4011", "토큰이 만료되었습니다.");
+        } catch (io.jsonwebtoken.MalformedJwtException | io.jsonwebtoken.SignatureException e) {
+            sendError(response, "4012", "잘못된 토큰입니다.");
+        } catch (Exception e) {
+            sendError(response, "4010", "인증이 필요합니다.");
         }
 
-        filterChain.doFilter(request, response);
     }
 
-    // 요청 헤더(Authorization: Bearer ...)에서 JWT 토큰 추출
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
-
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
-
         return null;
+    }
+
+    private void sendError(HttpServletResponse response, String code, String msg)
+        throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"rsltCode\":\"" + code + "\", \"rsltMsg\":\"" + msg + "\"}");
     }
 }

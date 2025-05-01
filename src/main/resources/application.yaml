@@ -8,4 +8,4 @@ spring:
     driver-class-name: org.mariadb.jdbc.Driver
 jwt:
   secret: NzJkNzNiNGNiN2E1YjYxM2FkMzFhNmNhNzE4M2ZhODRlNjdmODhiZTIzZjYyOTM5
-  expiration_time: 3600 # 1??
+  expiration_time: 3600 # 1시간

@@ -87,4 +87,12 @@ public class JwtUtil {
         }
     }
 
+    public void validateOrThrow(String token) {
+        Jwts.parserBuilder()
+            .setSigningKey(key)
+            .build()
+            .parseClaimsJws(token);
+    }
+
+
 }
