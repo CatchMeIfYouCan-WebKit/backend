@@ -1,5 +1,6 @@
 package com.team.webkit.backend.api.map.entity;
 
+import com.team.webkit.backend.api.member.Member;
 import com.team.webkit.backend.api.pet.Pet;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,7 +27,7 @@ public class MissingPost {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private Member user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pet_id", nullable = false)
