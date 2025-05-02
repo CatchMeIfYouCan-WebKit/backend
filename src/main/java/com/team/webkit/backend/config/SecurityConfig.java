@@ -29,7 +29,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/member/join", "/api/member/login", "/api/member/logout",
                     "/api/member/find", "/api/member/findId", "/api/member/chkPwd",
                     "/api/member/duplicate", "api/member/info", "api/member/duplicate/nickname",
-                    "api/member/password")
+                    "api/member/password","api/map/**")
                 .permitAll()
                 .anyRequest().authenticated()
             )
