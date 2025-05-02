@@ -1,6 +1,7 @@
 # 📌 추가 작업 시
 1. Download Zip x -> git clone o
 2. DB 설정 변경하기 : **application.yaml 파일에서 본인의 데이터베이스 url, username, password, driver에 맞게 설정하기.**
+3. **git push 하기 전에 작업한 폴더 다른 곳에 저장해놓기**
 
 <br/><br/>
 
