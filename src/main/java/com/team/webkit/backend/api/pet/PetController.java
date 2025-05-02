@@ -1,5 +1,7 @@
 package com.team.webkit.backend.api.pet;
 
+import com.team.webkit.backend.api.pet.dto.PetResponseDto;
+import com.team.webkit.backend.api.pet.file.FileService;
 import com.team.webkit.backend.support.annotation.MSP;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +14,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @MSP
 @RestController
@@ -21,21 +26,27 @@ import org.springframework.web.bind.annotation.RestController;
 public class PetController {
 
     private final PetService petService;
+    private final FileService fileService;
 
     // 반려동물 등록
-    @PostMapping
-    public ResponseEntity<Pet> add(@RequestBody Pet pet) {
+    @PostMapping(consumes = "multipart/form-data")
+    public ResponseEntity<Pet> add(@RequestPart("pet") Pet pet,
+        @RequestPart("file") MultipartFile file) {
         Integer userId = (Integer) SecurityContextHolder.getContext().getAuthentication()
             .getPrincipal();
+
+        String photoPath = fileService.save(file);
+        pet.setPhotoPath(photoPath);
 
         return ResponseEntity.ok(petService.add(pet, userId));
     }
 
     // 내 반려동물 전체 조회
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<Pet>> findAll() {
         Integer userId = (Integer) SecurityContextHolder.getContext().getAuthentication()
             .getPrincipal();
+
         return ResponseEntity.ok(petService.findAll(userId));
     }
 
@@ -44,6 +55,7 @@ public class PetController {
     public ResponseEntity<Pet> findById(@PathVariable Integer id) {
         Integer userId = (Integer) SecurityContextHolder.getContext().getAuthentication()
             .getPrincipal();
+
         return ResponseEntity.ok(petService.findById(id, userId));
     }
 
@@ -52,6 +64,7 @@ public class PetController {
     public ResponseEntity<Pet> update(@PathVariable Integer id, @RequestBody Pet request) {
         Integer userId = (Integer) SecurityContextHolder.getContext().getAuthentication()
             .getPrincipal();
+
         return ResponseEntity.ok(petService.update(id, request, userId));
     }
 
@@ -60,8 +73,30 @@ public class PetController {
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         Integer userId = (Integer) SecurityContextHolder.getContext().getAuthentication()
             .getPrincipal();
+
         petService.delete(id, userId);
         return ResponseEntity.noContent().build();
     }
+
+    // 반려동물의 주인 조회
+    @GetMapping("/{id}/owner")
+    public ResponseEntity<PetResponseDto> getPetOwner(@PathVariable Integer id) {
+        Integer userId = (Integer) SecurityContextHolder.getContext().getAuthentication()
+            .getPrincipal();
+
+        return ResponseEntity.ok(petService.getOwner(id, userId));
+    }
+
+    // 필터링
+    @GetMapping
+    public ResponseEntity<List<Pet>> findAll(
+        @RequestParam(required = false) String name,
+        @RequestParam(required = false) String breed
+    ) {
+        Integer userId = (Integer) SecurityContextHolder.getContext().getAuthentication()
+            .getPrincipal();
+        return ResponseEntity.ok(petService.findFiltered(userId, name, breed));
+    }
+
 
 }

@@ -2,6 +2,7 @@ package com.team.webkit.backend.api.pet;
 
 import com.team.webkit.backend.api.member.Member;
 import com.team.webkit.backend.api.member.MemberRepository;
+import com.team.webkit.backend.api.pet.dto.PetResponseDto;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ public class PetService {
     private final PetRepository petRepository;
     private final MemberRepository memberRepository;
 
+    // 반려동물 등록
     public Pet add(Pet pet, Integer userId) {
         log.info("PetService add : 반려동물 등록");
 
@@ -26,6 +28,7 @@ public class PetService {
         return petRepository.save(pet);
     }
 
+    // 내 반려동물 전체 조회
     public List<Pet> findAll(Integer userId) {
         log.info("PetService findAll : 내 반려동물 전체 조회");
 
@@ -35,6 +38,7 @@ public class PetService {
         return petRepository.findByMember(member);
     }
 
+    // 내 반려동물 상세 조회
     public Pet findById(Integer id, Integer userId) {
         log.info("PetService findById : 내 반려동물 상세 조회");
 
@@ -48,6 +52,7 @@ public class PetService {
         return pet;
     }
 
+    // 반려동물 수정
     public Pet update(Integer id, Pet updated, Integer userId) {
         log.info("PetService update : 반려동물 수정");
 
@@ -55,7 +60,7 @@ public class PetService {
 
         pet.setPhotoPath(updated.getPhotoPath());
         pet.setName(updated.getName());
-        pet.setSpecies(updated.getSpecies());
+        pet.setBreed(updated.getBreed());
         pet.setCoatColor(updated.getCoatColor());
         pet.setIsNeutered(updated.getIsNeutered());
         pet.setDateOfBirth(updated.getDateOfBirth());
@@ -66,10 +71,42 @@ public class PetService {
         return petRepository.save(pet);
     }
 
+    // 반려동물 삭제
     public void delete(Integer id, Integer memberId) {
         log.info("PetService delete : 반려동물 삭제");
 
         Pet pet = findById(id, memberId); // 권한 체크 포함
         petRepository.delete(pet);
     }
+
+    // 반려동물의 주인 조회
+    public PetResponseDto getOwner(Integer petId, Integer userId) {
+        Pet pet = findById(petId, userId);
+        Member owner = pet.getMember();
+
+        return new PetResponseDto(
+            owner.getLoginId(),
+            owner.getNickname(),
+            owner.getPhone()
+        );
+    }
+
+    // 필터링
+    public List<Pet> findFiltered(Integer userId, String name, String breed) {
+        Member member = memberRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
+
+        if (name != null && breed != null) {
+            return petRepository.findByMemberAndNameContainingAndBreedContaining(member, name,
+                breed);
+        } else if (name != null) {
+            return petRepository.findByMemberAndNameContaining(member, name);
+        } else if (breed != null) {
+            return petRepository.findByMemberAndBreedContaining(member, breed);
+        } else {
+            return petRepository.findByMember(member);
+        }
+    }
+
+
 }

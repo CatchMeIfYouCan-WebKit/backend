@@ -49,4 +49,5 @@ public class Member {
     @Column(name = "updated_at")
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
 }

@@ -104,6 +104,20 @@ public class MemberService {
         }
     }
 
+    public boolean passwordByLoginId(String loginId, String password) {
+        Optional<Member> optionalMember = memberRepository.findByLoginId(loginId);
+
+        if (optionalMember.isEmpty()) {
+            return false;
+        }
+
+        Member member = optionalMember.get();
+        member.setPassword(password); // 필요 시 비밀번호 암호화 처리
+        memberRepository.save(member);
+
+        return true;
+    }
+
 
     public String duplicateNickname(String nickname) {
         log.info("duplicateNickname : 닉네임 중복 검사");

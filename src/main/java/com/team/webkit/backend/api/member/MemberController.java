@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -138,6 +139,9 @@ public class MemberController {
         if (loginId.isEmpty()) {
             body.put("rsltCode", "1001");
             body.put("rsltMsg", "필수값 누락");
+        } else if (!isValidLoginId(loginId)) {
+            body.put("rsltCode", "2001");
+            body.put("rsltMsg", "아이디 형식이 올바르지 않습니다.");
         } else {
             String resultCode = memberService.duplicate(loginId);
 
@@ -212,35 +216,59 @@ public class MemberController {
 
     // 비밀번호 수정
     @PostMapping("/password")
-    public ResponseEntity<MspResult> password(@RequestBody Map<String, String> request) {
-        Integer id = (Integer) SecurityContextHolder.getContext().getAuthentication()
-            .getPrincipal();
-
+    public ResponseEntity<MspResult> password(
+        @RequestBody Map<String, String> request,
+        @RequestHeader(value = "Authorization", required = false) String authHeader
+    ) {
         String password = request.get("password");
+        String loginId = request.get("loginId"); // 비로그인용
 
         Map<String, String> body = new LinkedHashMap<>();
 
-        if (password.isEmpty()) {
+        if (password == null || password.isEmpty()) {
             body.put("rsltCode", "1001");
             body.put("rsltMsg", "필수값 누락");
-        } else if (!isValidPassword(password)) {
-            body.put("rsltCode", "1002");
-            body.put("rsltMsg", "비밀번호 형식이 올바르지 않습니다.");
-        } else {
-            boolean isUpdate = memberService.password(id, password);
-
-            if (isUpdate) {
-                body.put("rsltCode", "0000");
-                body.put("rsltMsg", "비밀번호 수정 성공");
-            } else {
-                body.put("rsltCode", "2003");
-                body.put("rsltMsg", "존재하지 않는 회원입니다.");
-            }
+            return ResponseEntity.ok(MspUtil.makeResult(MspStatus.OK, body));
         }
 
-        MspResult result = MspUtil.makeResult(MspStatus.OK, body);
+        if (!isValidPassword(password)) {
+            body.put("rsltCode", "1002");
+            body.put("rsltMsg", "비밀번호 형식이 올바르지 않습니다.");
+            return ResponseEntity.ok(MspUtil.makeResult(MspStatus.OK, body));
+        }
 
-        return ResponseEntity.ok(result);
+        boolean isUpdate = false;
+
+        // 로그인 상태: 토큰에서 ID 꺼내기
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            try {
+                Integer id = (Integer) SecurityContextHolder.getContext().getAuthentication()
+                    .getPrincipal();
+                isUpdate = memberService.password(id, password);
+            } catch (Exception e) {
+                body.put("rsltCode", "2003");
+                body.put("rsltMsg", "로그인 정보가 유효하지 않습니다.");
+                return ResponseEntity.ok(MspUtil.makeResult(MspStatus.OK, body));
+            }
+        }
+        // 비로그인 상태: loginId로 처리
+        else if (loginId != null && !loginId.isEmpty()) {
+            isUpdate = memberService.passwordByLoginId(loginId, password);
+        } else {
+            body.put("rsltCode", "1001");
+            body.put("rsltMsg", "아이디가 필요합니다.");
+            return ResponseEntity.ok(MspUtil.makeResult(MspStatus.OK, body));
+        }
+
+        if (isUpdate) {
+            body.put("rsltCode", "0000");
+            body.put("rsltMsg", "비밀번호 수정 성공");
+        } else {
+            body.put("rsltCode", "2003");
+            body.put("rsltMsg", "존재하지 않는 회원입니다.");
+        }
+
+        return ResponseEntity.ok(MspUtil.makeResult(MspStatus.OK, body));
     }
 
 

@@ -1,6 +1,8 @@
 package com.team.webkit.backend.api.pet;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.team.webkit.backend.api.member.Member;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -26,6 +28,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
@@ -43,6 +46,11 @@ public class Pet {
     @JsonIgnore
     private Member member;
 
+    @JsonProperty("user_id")
+    public Integer getUserId() {
+        return member != null ? member.getId() : null;
+    }
+
     @Column(name = "photo_path", nullable = false, length = 500)
     @NotBlank(message = "사진은 필수입니다.")
     private String photoPath;
@@ -51,9 +59,9 @@ public class Pet {
     @NotBlank(message = "이름은 필수입니다.")
     private String name;
 
-    @Column(name = "species", nullable = false, length = 50)
+    @Column(name = "breed", nullable = false, length = 50)
     @NotBlank(message = "종은 필수입니다.")
-    private String species;
+    private String breed;
 
     @Column(name = "coat_color", length = 50)
     @NotBlank(message = "색깔은 필수입니다.")
