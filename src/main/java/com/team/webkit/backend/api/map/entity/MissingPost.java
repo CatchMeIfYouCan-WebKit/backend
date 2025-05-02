@@ -29,7 +29,7 @@ public class MissingPost {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pet_id", nullable = false)
-    private Pet pet;
+    private PetEntity pet;
 
     @Column(name = "photo_url")
     private String photoUrl;
