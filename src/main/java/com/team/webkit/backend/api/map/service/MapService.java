@@ -2,6 +2,7 @@ package com.team.webkit.backend.api.map.service;
 
 import com.team.webkit.backend.api.map.DTO.HospitalResponse;
 import com.team.webkit.backend.api.map.DTO.MapPostResponse;
+import com.team.webkit.backend.api.map.DTO.ShelterAnimalSummary;
 import com.team.webkit.backend.api.map.DTO.ShelterResponse;
 import com.team.webkit.backend.api.map.Repository.AnimalHospitalRepository;
 import com.team.webkit.backend.api.map.Repository.ShelterAdoptionAnimalRepository;
@@ -13,7 +14,10 @@ import com.team.webkit.backend.api.pet.Pet;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -78,25 +82,65 @@ public class MapService {
         }).collect(Collectors.toList());
     }
     public List<ShelterResponse> getShelterAnnouncements() {
-        List<ShelterResponse> fromAnnouncements = shelterAnimalAnnouncementRepository.findAll().stream()
-                .map(announcement -> ShelterResponse.builder()
-                        .shelterName(announcement.getShelterName())
-                        .phone(announcement.getPhone())
-                        .address(announcement.getAddress()) // ✅ address 포함
-                        .build())
-                .collect(Collectors.toList());
+        Map<String, ShelterResponse> shelterMap = new HashMap<>();
 
-        List<ShelterResponse> fromAdoptions = shelterAdoptionAnimalRepository.findAll().stream()
-                .map(adoption -> ShelterResponse.builder()
-                        .shelterName(adoption.getShelterName())
-                        .phone(adoption.getShelterContact())
-                        .address(adoption.getProtectionLocation()) // ✅ 보호장소 포함
-                        .build())
-                .collect(Collectors.toList());
+        // 🟢 1. shelter_animal_announcements 처리
+        shelterAnimalAnnouncementRepository.findAll().forEach(announcement -> {
+            String key = announcement.getShelterName();
 
-        fromAnnouncements.addAll(fromAdoptions);
-        return fromAnnouncements;
+            ShelterAnimalSummary summary = new ShelterAnimalSummary(
+                    announcement.getBreed(),
+                    announcement.getCoatColor(),
+                    announcement.getGender(),
+                    announcement.getNeutered(),
+                    "보호중", // 상태는 임의 설정
+                    announcement.getAnnounceEnd()
+            );
+
+            shelterMap.computeIfAbsent(key, k -> ShelterResponse.builder()
+                    .shelterName(announcement.getShelterName())
+                    .phone(announcement.getPhone())
+                    .address(announcement.getAddress())
+                    .animalSummaries(new ArrayList<>())
+                    .animalCount(0)
+                    .build()
+            );
+
+            ShelterResponse response = shelterMap.get(key);
+            response.getAnimalSummaries().add(summary);
+            response.setAnimalCount(response.getAnimalSummaries().size());
+        });
+
+        // 🟢 2. shelter_adoption_animals 처리
+        shelterAdoptionAnimalRepository.findAll().forEach(adoption -> {
+            String key = adoption.getShelterName();
+
+            ShelterAnimalSummary summary = new ShelterAnimalSummary(
+                    adoption.getBreed(),
+                    adoption.getColor(),
+                    adoption.getGender(),
+                    adoption.getNeutered(),
+                    adoption.getStatus(),
+                    null // announceEnd가 없으니 null 처리
+            );
+
+            shelterMap.computeIfAbsent(key, k -> ShelterResponse.builder()
+                    .shelterName(adoption.getShelterName())
+                    .phone(adoption.getShelterContact())
+                    .address(adoption.getProtectionLocation())
+                    .animalSummaries(new ArrayList<>())
+                    .animalCount(0)
+                    .build()
+            );
+
+            ShelterResponse response = shelterMap.get(key);
+            response.getAnimalSummaries().add(summary);
+            response.setAnimalCount(response.getAnimalSummaries().size());
+        });
+
+        return new ArrayList<>(shelterMap.values());
     }
+
 
 
 
