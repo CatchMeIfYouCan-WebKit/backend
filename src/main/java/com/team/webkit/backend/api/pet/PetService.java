@@ -81,6 +81,8 @@ public class PetService {
 
     // 반려동물의 주인 조회
     public PetResponseDto getOwner(Integer petId, Integer userId) {
+        log.info("PetService getOwner : 반려동물의 주인 조회");
+
         Pet pet = findById(petId, userId);
         Member owner = pet.getMember();
 
@@ -89,6 +91,13 @@ public class PetService {
             owner.getNickname(),
             owner.getPhone()
         );
+    }
+
+    // 동물등록번호 중복 검사
+    public boolean checkRegNum(String registrationNo, Integer userId) {
+        log.info("PetService checkRegNum : 동물등록번호 중복 검사");
+
+        return petRepository.existsByRegistrationNumber(registrationNo);
     }
 
     // 필터링

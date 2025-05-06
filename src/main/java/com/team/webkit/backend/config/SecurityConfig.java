@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -29,7 +30,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/member/join", "/api/member/login", "/api/member/logout",
                     "/api/member/find", "/api/member/findId", "/api/member/chkPwd",
                     "/api/member/duplicate", "/api/member/info", "/api/member/duplicate/nickname",
-                    "/api/member/password","/api/map/**")
+                    "/api/member/password", "/api/map/**", "/error", "/uploads/**",
+                    "/default-image.png", "api/animal-profile")
                 .permitAll()
                 .anyRequest().authenticated()
             )
@@ -41,4 +43,11 @@ public class SecurityConfig {
                 org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
             .build();
     }
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return web -> web.ignoring()
+            .requestMatchers("/uploads/**", "/favicon.ico", "/static/**", "/resources/**");
+    }
+
 }

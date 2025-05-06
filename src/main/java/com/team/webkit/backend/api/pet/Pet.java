@@ -51,7 +51,7 @@ public class Pet {
         return member != null ? member.getId() : null;
     }
 
-    @Column(name = "photo_path", nullable = false, length = 500)
+    //    @Column(name = "photo_path", nullable = false, length = 500)
     @NotBlank(message = "사진은 필수입니다.")
     private String photoPath;
 
@@ -66,6 +66,10 @@ public class Pet {
     @Column(name = "coat_color", length = 50)
     @NotBlank(message = "색깔은 필수입니다.")
     private String coatColor;
+
+    @Column(name = "gender")
+    @NotNull(message = "성별은 필수입니다.")
+    private String gender;
 
     @Column(name = "is_neutered", nullable = false)
     @NotNull(message = "중성화 여부는 필수입니다.")

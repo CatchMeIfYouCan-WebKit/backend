@@ -15,4 +15,5 @@ public interface PetRepository extends JpaRepository<Pet, Integer> {
     List<Pet> findByMemberAndNameContainingAndBreedContaining(Member member, String name,
         String breed);
 
+    boolean existsByRegistrationNumber(String regNum);
 }

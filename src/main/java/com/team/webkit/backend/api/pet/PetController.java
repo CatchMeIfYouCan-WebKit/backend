@@ -1,18 +1,23 @@
 package com.team.webkit.backend.api.pet;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.team.webkit.backend.api.pet.dto.PetResponseDto;
 import com.team.webkit.backend.api.pet.file.FileService;
 import com.team.webkit.backend.support.annotation.MSP;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -22,21 +27,32 @@ import org.springframework.web.multipart.MultipartFile;
 @MSP
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/pet")
+@RequestMapping("/api/animal-profile")
 public class PetController {
 
     private final PetService petService;
     private final FileService fileService;
 
     // 반려동물 등록
-    @PostMapping(consumes = "multipart/form-data")
-    public ResponseEntity<Pet> add(@RequestPart("pet") Pet pet,
-        @RequestPart("file") MultipartFile file) {
+    @PostMapping(
+        consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<?> add(@RequestPart("pet") String petJson,
+        @RequestPart("file") MultipartFile file) throws JsonProcessingException {
         Integer userId = (Integer) SecurityContextHolder.getContext().getAuthentication()
             .getPrincipal();
 
-        String photoPath = fileService.save(file);
-        pet.setPhotoPath(photoPath);
+        System.out.println("[파일 수신 여부] file == null: " + (file == null));
+        System.out.println("[파일 수신 여부] file.isEmpty(): " + (file != null && file.isEmpty()));
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        Pet pet = objectMapper.readValue(petJson, Pet.class);
+
+        if (file != null && !file.isEmpty()) {
+            String photoPath = fileService.save(file);
+            pet.setPhotoPath(photoPath);
+        }
 
         return ResponseEntity.ok(petService.add(pet, userId));
     }
@@ -60,13 +76,31 @@ public class PetController {
     }
 
     // 반려동물 수정
-    @PutMapping("/{id}")
-    public ResponseEntity<Pet> update(@PathVariable Integer id, @RequestBody Pet request) {
+    @PostMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> update(@PathVariable Integer id,
+        @RequestPart("pet") String petJson,
+        @RequestPart(value = "file", required = false) MultipartFile file)
+        throws JsonProcessingException {
+
         Integer userId = (Integer) SecurityContextHolder.getContext().getAuthentication()
             .getPrincipal();
 
-        return ResponseEntity.ok(petService.update(id, request, userId));
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        Pet pet = objectMapper.readValue(petJson, Pet.class);
+
+        if (file != null && !file.isEmpty()) {
+            String photoPath = fileService.save(file);
+            pet.setPhotoPath(photoPath);
+        } else if (pet.getPhotoPath() == null) {
+            // 파일도 없고 photoPath도 없을 경우 기존 값 유지
+            Pet original = petService.findById(id, userId);
+            pet.setPhotoPath(original.getPhotoPath());
+        }
+
+        return ResponseEntity.ok(petService.update(id, pet, userId));
     }
+
 
     // 반려동물 삭제
     @DeleteMapping("/{id}")
@@ -86,6 +120,25 @@ public class PetController {
 
         return ResponseEntity.ok(petService.getOwner(id, userId));
     }
+
+    // 동물등록번호 중복 검사
+    @GetMapping("/checkRegistrationNo")
+    public ResponseEntity<Map<String, Object>> checkRegistrationNo(
+        @RequestParam String registrationNo) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated() || auth.getPrincipal()
+            .equals("anonymousUser")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("message", "로그인이 필요합니다."));
+        }
+
+        Integer userId = (Integer) auth.getPrincipal();
+        boolean exists = petService.checkRegNum(registrationNo, userId);
+
+        return ResponseEntity.ok(Map.of("exists", exists));
+    }
+
 
     // 필터링
     @GetMapping
