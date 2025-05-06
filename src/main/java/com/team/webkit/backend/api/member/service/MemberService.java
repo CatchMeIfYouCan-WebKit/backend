@@ -1,5 +1,7 @@
-package com.team.webkit.backend.api.member;
+package com.team.webkit.backend.api.member.service;
 
+import com.team.webkit.backend.api.member.entity.Member;
+import com.team.webkit.backend.api.member.repository.MemberRepository;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

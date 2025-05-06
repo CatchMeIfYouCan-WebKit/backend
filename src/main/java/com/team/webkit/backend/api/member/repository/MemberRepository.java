@@ -1,5 +1,6 @@
-package com.team.webkit.backend.api.member;
+package com.team.webkit.backend.api.member.repository;
 
+import com.team.webkit.backend.api.member.entity.Member;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 

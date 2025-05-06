@@ -1,6 +1,6 @@
 package com.team.webkit.backend.config;
 
-import com.team.webkit.backend.api.member.Member;
+import com.team.webkit.backend.api.member.entity.Member;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;

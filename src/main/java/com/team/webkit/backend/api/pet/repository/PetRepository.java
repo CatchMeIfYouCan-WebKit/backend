@@ -1,6 +1,7 @@
-package com.team.webkit.backend.api.pet;
+package com.team.webkit.backend.api.pet.repository;
 
-import com.team.webkit.backend.api.member.Member;
+import com.team.webkit.backend.api.member.entity.Member;
+import com.team.webkit.backend.api.pet.entity.Pet;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 

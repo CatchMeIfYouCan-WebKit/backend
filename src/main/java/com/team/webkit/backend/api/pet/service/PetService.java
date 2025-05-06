@@ -1,8 +1,10 @@
-package com.team.webkit.backend.api.pet;
+package com.team.webkit.backend.api.pet.service;
 
-import com.team.webkit.backend.api.member.Member;
-import com.team.webkit.backend.api.member.MemberRepository;
+import com.team.webkit.backend.api.member.entity.Member;
+import com.team.webkit.backend.api.member.repository.MemberRepository;
 import com.team.webkit.backend.api.pet.dto.PetResponseDto;
+import com.team.webkit.backend.api.pet.entity.Pet;
+import com.team.webkit.backend.api.pet.repository.PetRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

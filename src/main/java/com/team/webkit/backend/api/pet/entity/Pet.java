@@ -1,9 +1,9 @@
-package com.team.webkit.backend.api.pet;
+package com.team.webkit.backend.api.pet.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.team.webkit.backend.api.member.Member;
+import com.team.webkit.backend.api.member.entity.Member;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;

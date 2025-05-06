@@ -1,5 +1,7 @@
-package com.team.webkit.backend.api.member;
+package com.team.webkit.backend.api.member.controller;
 
+import com.team.webkit.backend.api.member.entity.Member;
+import com.team.webkit.backend.api.member.service.MemberService;
 import com.team.webkit.backend.config.JwtUtil;
 import com.team.webkit.backend.support.MspUtil;
 import com.team.webkit.backend.support.annotation.MSP;
