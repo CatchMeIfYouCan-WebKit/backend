@@ -4,6 +4,7 @@ import com.team.webkit.backend.api.comment.dto.CommentRequest;
 import com.team.webkit.backend.api.comment.dto.CommentResponse;
 import com.team.webkit.backend.api.comment.service.CommentService;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,8 +36,8 @@ public class CommentController {
 
     // 댓글 삭제
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        commentService.delete(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Map<String, String>> delete(@PathVariable Long id) {
+        String type = commentService.delete(id);
+        return ResponseEntity.ok(Map.of("message", "삭제 완료", "type", type));
     }
 }

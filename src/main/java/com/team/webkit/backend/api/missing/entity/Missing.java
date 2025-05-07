@@ -4,6 +4,7 @@ import com.team.webkit.backend.api.member.entity.Member;
 import com.team.webkit.backend.api.pet.entity.Pet;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
@@ -21,8 +22,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -64,9 +67,6 @@ public class Missing {
     @Column(name = "detail_description")
     @NotBlank(message = "상세설명 입력은 필수입니다.")
     private String detailDescription;
-
-    @Column(name = "comments")
-    private String comments;
 
     @Column(name = "created_at", updatable = false)
     @CreatedDate

@@ -9,6 +9,7 @@ import com.team.webkit.backend.api.missing.service.MissingService;
 import com.team.webkit.backend.api.pet.service.FileService;
 import com.team.webkit.backend.support.annotation.MSP;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -79,9 +80,9 @@ public class MissingController {
 
     // 게시글 삭제
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Map<String, String>> delete(@PathVariable Long id) {
         missingService.delete(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(Map.of("message", "삭제 완료"));
     }
 
     // 게시글 검색 : 사용자

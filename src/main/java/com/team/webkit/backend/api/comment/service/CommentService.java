@@ -24,6 +24,7 @@ public class CommentService {
     private final MissingRepository missingRepository;
 
     @Transactional
+    // 댓글 작성
     public CommentResponse create(CommentRequest req) {
         log.info("댓글 등록 요청 - 게시글 ID: {}, 사용자 ID: {}, 내용: {}", req.getPostId(), req.getUserId(),
             req.getContent());
@@ -35,7 +36,12 @@ public class CommentService {
         comment.setMember(memberRepository.findById(req.getUserId()).orElseThrow());
 
         if (req.getParentCommentId() != null) {
-            Comment parent = commentRepository.findById(req.getParentCommentId()).orElseThrow();
+            Comment parent = commentRepository.findById(req.getParentCommentId())
+                .orElseThrow(() -> {
+                    log.warn("대댓글 등록 실패 - 부모 댓글이 존재하지 않음. ID: {}", req.getParentCommentId());
+                    return new IllegalArgumentException("부모 댓글이 존재하지 않습니다.");
+                });
+
             comment.setParent(parent);
             log.info("대댓글로 등록 - 부모 댓글 ID: {}", parent.getId());
         }
@@ -46,6 +52,7 @@ public class CommentService {
         return CommentResponse.from(saved);
     }
 
+    // 게시판 댓글 목록 조회
     public List<CommentResponse> getComments(Long postId) {
         log.info("게시글 ID {}의 댓글 목록 조회 요청", postId);
 
@@ -54,15 +61,14 @@ public class CommentService {
             .collect(Collectors.toList());
     }
 
-    public void delete(Long id) {
+    // 댓글 삭제
+    public String delete(Long id) {
         log.info("댓글 삭제 요청 - ID: {}", id);
 
         Comment comment = commentRepository.findById(id).orElseThrow();
 
-        // 현재 로그인된 사용자
         Integer currentUserId = (Integer) SecurityContextHolder.getContext().getAuthentication()
             .getPrincipal();
-        // 댓글 작성자
         Integer commentWriterId = comment.getMember().getId();
 
         if (!commentWriterId.equals(currentUserId)) {
@@ -71,8 +77,10 @@ public class CommentService {
             throw new RuntimeException("댓글 작성자만 삭제할 수 있습니다.");
         }
 
+        boolean isChild = comment.getParent() != null;
         commentRepository.deleteById(id);
-
         log.info("댓글 삭제 완료 - ID: {}", id);
+
+        return isChild ? "대댓글" : "원댓글";
     }
 }

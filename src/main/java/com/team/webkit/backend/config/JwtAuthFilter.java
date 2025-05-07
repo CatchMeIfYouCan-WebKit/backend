@@ -1,6 +1,7 @@
 package com.team.webkit.backend.config;
 
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,7 +27,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         HttpServletResponse response,
         FilterChain filterChain) throws ServletException, IOException {
         String uri = request.getRequestURI();
-        
+
         if (uri.startsWith("/uploads/")) {
             filterChain.doFilter(request, response);
             return;
@@ -53,8 +54,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             sendError(response, "4011", "토큰이 만료되었습니다.");
         } catch (io.jsonwebtoken.MalformedJwtException | io.jsonwebtoken.SignatureException e) {
             sendError(response, "4012", "잘못된 토큰입니다.");
-        } catch (Exception e) {
-            sendError(response, "4010", "인증이 필요합니다.");
+        } catch (JwtException e) {
+            sendError(response, "4013", "JWT 처리 중 오류가 발생했습니다.");
         }
 
     }

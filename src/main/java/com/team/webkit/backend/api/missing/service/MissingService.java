@@ -29,10 +29,21 @@ public class MissingService {
         Integer currentUserId = (Integer) SecurityContextHolder.getContext().getAuthentication()
             .getPrincipal();
 
-        Missing post = new Missing();
+        var member = memberRepository.findById(currentUserId)
+            .orElseThrow(() -> {
+                log.error("사용자 없음 - ID: {}", currentUserId);
+                return new RuntimeException("사용자를 찾을 수 없습니다.");
+            });
 
-        post.setMember(memberRepository.findById(currentUserId).orElseThrow());
-        post.setPet(petRepository.findById(req.petId).orElseThrow());
+        var pet = petRepository.findById(req.petId)
+            .orElseThrow(() -> {
+                log.error("반려동물 없음 - ID: {}", req.petId);
+                return new RuntimeException("반려동물을 찾을 수 없습니다.");
+            });
+
+        Missing post = new Missing();
+        post.setMember(member);
+        post.setPet(pet);
         post.setPostType(Missing.PostType.valueOf(req.postType));
         post.setPhotoUrl(req.photoUrl);
         post.setMissingDatetime(req.missingDatetime);
@@ -64,10 +75,14 @@ public class MissingService {
     public MissingResponse update(Long id, MissingRequest req) {
         log.info("게시글 수정 요청 (ID: {}, 데이터: {})", id, req);
 
-        Missing post = missingRepository.findById(id).orElseThrow();
-
         Integer currentUserId = (Integer) SecurityContextHolder.getContext().getAuthentication()
             .getPrincipal();
+
+        Missing post = missingRepository.findById(id)
+            .orElseThrow(() -> {
+                log.error("게시글 없음 - ID: {}", id);
+                return new RuntimeException("해당 게시글을 찾을 수 없습니다.");
+            });
 
         if (!post.getMember().getId().equals(currentUserId)) {
             log.warn("수정 권한 없음 - 요청자 ID: {}, 게시글 작성자 ID: {}", currentUserId,
@@ -79,7 +94,13 @@ public class MissingService {
             req.photoUrl = post.getPhotoUrl();
         }
 
-        post.setPostType(Missing.PostType.valueOf(req.postType));
+        try {
+            post.setPostType(Missing.PostType.valueOf(req.postType));
+        } catch (IllegalArgumentException e) {
+            log.error("유효하지 않은 postType 값: {}", req.postType);
+            throw new RuntimeException("postType 값이 잘못되었습니다.");
+        }
+
         post.setPhotoUrl(req.photoUrl);
         post.setMissingDatetime(req.missingDatetime);
         post.setMissingLocation(req.missingLocation);
@@ -99,6 +120,7 @@ public class MissingService {
 
         Integer currentUserId = (Integer) SecurityContextHolder.getContext().getAuthentication()
             .getPrincipal();
+
         if (!post.getMember().getId().equals(currentUserId)) {
             log.warn("삭제 권한 없음 - 요청자 ID: {}, 게시글 작성자 ID: {}", currentUserId,
                 post.getMember().getId());
@@ -111,7 +133,7 @@ public class MissingService {
 
     // 게시글 검색 : 사용자
     public List<MissingResponse> getByUser(Integer userId) {
-        log.info("사용자 기준 게시글 조회 요청 (userId: {})", userId);
+        log.info("게시글 검색 - 사용자 (userId: {})", userId);
 
         return missingRepository.findByMemberId(userId).stream().map(MissingResponse::from)
             .toList();
@@ -119,13 +141,13 @@ public class MissingService {
 
     // 게시글 검색 : 펫
     public List<MissingResponse> getByPet(Integer petId) {
-        log.info("반려동물 기준 게시글 조회 요청 (petId: {})", petId);
+        log.info("게시글 검색 - 펫 (petId: {})", petId);
         return missingRepository.findByPetId(petId).stream().map(MissingResponse::from).toList();
     }
 
     // 게시글 검색 : 실종 or 목격
     public List<MissingResponse> getByType(String type) {
-        log.info("게시글 유형별 조회 요청 (type: {})", type);
+        log.info("게시글 검색 - 실종/목격 (type: {})", type);
         return missingRepository.findByPostType(Missing.PostType.valueOf(type)).stream()
             .map(MissingResponse::from).toList();
     }
