@@ -3,6 +3,8 @@ package com.team.webkit.backend.api.missing.service;
 import com.team.webkit.backend.api.member.repository.MemberRepository;
 import com.team.webkit.backend.api.missing.dto.MissingRequest;
 import com.team.webkit.backend.api.missing.dto.MissingResponse;
+import com.team.webkit.backend.api.missing.dto.WitnessRequest;
+import com.team.webkit.backend.api.missing.dto.WitnessResponse;
 import com.team.webkit.backend.api.missing.entity.Missing;
 import com.team.webkit.backend.api.missing.repository.MissingRepository;
 import com.team.webkit.backend.api.pet.repository.PetRepository;
@@ -21,9 +23,9 @@ public class MissingService {
     private final MemberRepository memberRepository;
     private final PetRepository petRepository;
 
-    // 실종/목격 게시글 등록
+    // 실종 게시글 등록
     public MissingResponse create(MissingRequest req) {
-        log.info("실종/목격 게시글 등록 요청: {}", req);
+        log.info("실종 게시글 등록 요청: {}", req);
 
         // 🔐 현재 로그인한 사용자 ID 가져오기
         Integer currentUserId = (Integer) SecurityContextHolder.getContext().getAuthentication()
@@ -52,10 +54,37 @@ public class MissingService {
 
         Missing saved = missingRepository.save(post);
 
-        log.info("게시글 등록 완료 (ID: {})", saved.getId());
+        log.info("실종 게시글 등록 완료 (ID: {})", saved.getId());
 
         return MissingResponse.from(saved);
     }
+
+    // 목격 게시글 등록
+    public WitnessResponse createWitness(WitnessRequest req, Integer userId) {
+        log.info("목격 게시글 등록 요청: {}", req);
+
+        Integer currentUserId = (Integer) SecurityContextHolder.getContext().getAuthentication()
+            .getPrincipal();
+
+        var member = memberRepository.findById(currentUserId)
+            .orElseThrow(() -> {
+                log.error("사용자 없음 - ID: {}", currentUserId);
+                return new RuntimeException("사용자를 찾을 수 없습니다.");
+            });
+
+        Missing post = new Missing();
+        post.setMember(member);
+        post.setPostType(Missing.PostType.witness);
+        post.setPhotoUrl(req.photoUrl);
+        post.setMissingDatetime(req.witnessDatetime);
+        post.setMissingLocation(req.witnessLocation);
+        post.setDetailDescription(req.detailDescription);
+
+        Missing saved = missingRepository.save(post);
+
+        return WitnessResponse.from(saved);
+    }
+
 
     // 게시글 전체 조회
     public List<MissingResponse> getAll() {
@@ -71,8 +100,8 @@ public class MissingService {
         return MissingResponse.from(missingRepository.findById(id).orElseThrow());
     }
 
-    // 게시글 수정
-    public MissingResponse update(Long id, MissingRequest req) {
+    // 실종 게시글 수정
+    public MissingResponse updateMissing(Long id, MissingRequest req) {
         log.info("게시글 수정 요청 (ID: {}, 데이터: {})", id, req);
 
         Integer currentUserId = (Integer) SecurityContextHolder.getContext().getAuthentication()
@@ -111,6 +140,41 @@ public class MissingService {
 
         return MissingResponse.from(updated);
     }
+
+    // 목격 게시글 수정
+    public WitnessResponse updateWitness(Long id, WitnessRequest req) {
+        log.info("목격 게시글 수정 요청 (ID: {}, 데이터: {})", id, req);
+
+        Integer currentUserId = (Integer) SecurityContextHolder.getContext()
+            .getAuthentication().getPrincipal();
+
+        Missing post = missingRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("해당 게시글을 찾을 수 없습니다."));
+
+        if (!post.getMember().getId().equals(currentUserId)) {
+            log.warn("수정 권한 없음 - 요청자 ID: {}, 작성자 ID: {}", currentUserId, post.getMember().getId());
+            throw new RuntimeException("게시글 작성자만 수정할 수 있습니다.");
+        }
+
+        // postType 고정
+        post.setPostType(Missing.PostType.witness);
+
+        // 기존 사진 유지
+        if (req.photoUrl == null || req.photoUrl.isBlank()) {
+            req.photoUrl = post.getPhotoUrl();
+        }
+
+        post.setPhotoUrl(req.photoUrl);
+        post.setMissingDatetime(req.witnessDatetime);
+        post.setMissingLocation(req.witnessLocation);
+        post.setDetailDescription(req.detailDescription);
+
+        Missing updated = missingRepository.save(post);
+        log.info("목격 게시글 수정 완료 (ID: {})", updated.getId());
+
+        return WitnessResponse.from(updated);
+    }
+
 
     // 게시글 삭제
     public void delete(Long id) {
