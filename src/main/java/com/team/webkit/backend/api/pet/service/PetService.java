@@ -64,6 +64,7 @@ public class PetService {
         pet.setName(updated.getName());
         pet.setBreed(updated.getBreed());
         pet.setCoatColor(updated.getCoatColor());
+        pet.setGender(updated.getGender());
         pet.setIsNeutered(updated.getIsNeutered());
         pet.setDateOfBirth(updated.getDateOfBirth());
         pet.setAge(updated.getAge());

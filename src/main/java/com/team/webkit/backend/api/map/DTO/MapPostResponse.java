@@ -1,13 +1,13 @@
 package com.team.webkit.backend.api.map.DTO;
 
+import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Data;
-
-import java.time.LocalDateTime;
 
 @Data
 @Builder
 public class MapPostResponse {
+
     private String postType;          // missing / witness
     private String missingLocation;
     private String photoUrl;

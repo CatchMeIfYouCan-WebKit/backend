@@ -1,14 +1,19 @@
 package com.team.webkit.backend.api.map.DTO;
 
-import lombok.*;
-
 import java.time.LocalDate;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 @Builder
 public class ShelterAnimalSummary {
+
     private String breed;              // 품종
     private String coatColor;          // 색상
     private String gender;             // 성별

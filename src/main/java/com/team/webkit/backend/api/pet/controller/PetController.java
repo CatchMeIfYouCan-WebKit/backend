@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.team.webkit.backend.api.pet.dto.PetResponseDto;
 import com.team.webkit.backend.api.pet.entity.Pet;
-import com.team.webkit.backend.api.pet.file.FileService;
+import com.team.webkit.backend.api.pet.service.FileService;
 import com.team.webkit.backend.api.pet.service.PetService;
 import com.team.webkit.backend.support.annotation.MSP;
 import java.util.List;
@@ -139,18 +139,6 @@ public class PetController {
         boolean exists = petService.checkRegNum(registrationNo, userId);
 
         return ResponseEntity.ok(Map.of("exists", exists));
-    }
-
-
-    // 필터링
-    @GetMapping
-    public ResponseEntity<List<Pet>> findAll(
-        @RequestParam(required = false) String name,
-        @RequestParam(required = false) String breed
-    ) {
-        Integer userId = (Integer) SecurityContextHolder.getContext().getAuthentication()
-            .getPrincipal();
-        return ResponseEntity.ok(petService.findFiltered(userId, name, breed));
     }
 
 

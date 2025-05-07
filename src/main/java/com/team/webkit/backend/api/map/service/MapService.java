@@ -5,11 +5,9 @@ import com.team.webkit.backend.api.map.DTO.MapPostResponse;
 import com.team.webkit.backend.api.map.DTO.ShelterAnimalSummary;
 import com.team.webkit.backend.api.map.DTO.ShelterResponse;
 import com.team.webkit.backend.api.map.Repository.AnimalHospitalRepository;
-import com.team.webkit.backend.api.map.Repository.MissingPostRepository;
 import com.team.webkit.backend.api.map.Repository.ShelterAdoptionAnimalRepository;
 import com.team.webkit.backend.api.map.Repository.ShelterAnimalAnnouncementRepository;
-import com.team.webkit.backend.api.missing.Missing;
-import com.team.webkit.backend.api.missing.PostType;
+import com.team.webkit.backend.api.missing.entity.Missing;
 import com.team.webkit.backend.api.pet.entity.Pet;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,47 +21,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class MapService {
 
-    private final MissingPostRepository missingPostRepository;
     private final ShelterAnimalAnnouncementRepository shelterAnimalAnnouncementRepository;
     private final AnimalHospitalRepository animalHospitalRepository;
     private final ShelterAdoptionAnimalRepository shelterAdoptionAnimalRepository;
 
-
-    // 1. 실종 + 목격
-    public List<MapPostResponse> getAllPosts() {
-        List<Missing> posts = missingPostRepository.findAllWithPet();
-        return convertToResponse(posts);
-    }
-
-    // 2. 실종만
-    public List<MapPostResponse> getMissingPosts() {
-        List<Missing> posts = missingPostRepository.findByPostTypeWithPet(PostType.missing);
-        return convertToResponse(posts);
-    }
-
-    // 3. 목격만
-    public List<MapPostResponse> getWitnessPosts() {
-        List<Missing> posts = missingPostRepository.findByPostTypeWithPet(PostType.witness);
-        return convertToResponse(posts);
-    }
-
-    // 4. 품종
-    public List<MapPostResponse> getByBreed(String breed) {
-        List<Missing> posts = missingPostRepository.findByPetBreed(breed);
-        return convertToResponse(posts);
-    }
-
-    // 5. 털색
-    public List<MapPostResponse> getByCoatColor(String coatColor) {
-        List<Missing> posts = missingPostRepository.findByPetCoatColor(coatColor);
-        return convertToResponse(posts);
-    }
-
-    // 6. 품종 + 털색
-    public List<MapPostResponse> getByBreedAndColor(String breed, String coatColor) {
-        List<Missing> posts = missingPostRepository.findByPetBreedAndCoatColor(breed, coatColor);
-        return convertToResponse(posts);
-    }
 
     // 🔄 공통 변환 로직
     private List<MapPostResponse> convertToResponse(List<Missing> posts) {

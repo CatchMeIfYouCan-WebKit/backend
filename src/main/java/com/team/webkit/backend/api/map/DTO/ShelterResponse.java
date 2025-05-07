@@ -1,8 +1,12 @@
 package com.team.webkit.backend.api.map.DTO;
 
-import lombok.*;
-
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Data
 @Getter
@@ -11,6 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class ShelterResponse {
+
     private String shelterName;
     private String phone;
     private String address;

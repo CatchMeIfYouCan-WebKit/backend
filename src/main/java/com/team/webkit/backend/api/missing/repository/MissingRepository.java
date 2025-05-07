@@ -1,5 +1,14 @@
 package com.team.webkit.backend.api.missing.repository;
 
-public interface MissingRepository {
+import com.team.webkit.backend.api.missing.entity.Missing;
+import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
 
+public interface MissingRepository extends JpaRepository<Missing, Long> {
+
+    List<Missing> findByMemberId(Integer userId);
+
+    List<Missing> findByPetId(Integer petId);
+
+    List<Missing> findByPostType(Missing.PostType postType);
 }
