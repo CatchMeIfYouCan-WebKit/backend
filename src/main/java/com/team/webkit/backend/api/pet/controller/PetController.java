@@ -69,7 +69,7 @@ public class PetController {
             throw new IllegalArgumentException("파일이 비어 있습니다.");
         }
 
-        String photoPath = fileService.save(file); // 예: /uploads/xxx.jpg
+        String photoPath = fileService.save(file);
         return ResponseEntity.ok(Map.of("photoPath", photoPath));
     }
 
