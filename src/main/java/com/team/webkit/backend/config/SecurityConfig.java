@@ -31,7 +31,8 @@ public class SecurityConfig {
                     "/api/member/find", "/api/member/findId", "/api/member/chkPwd",
                     "/api/member/duplicate", "/api/member/info", "/api/member/duplicate/nickname",
                     "/api/member/password", "/api/map/**", "/error", "/uploads/**",
-                    "/default-image.png", "api/animal-profile/**")
+                    "/default-image.png", "api/animal-profile/**","/ws/**", "/topic/**", "/queue/**",
+                        "/user/**","/api/chat/messages")
                 .permitAll()
                 .anyRequest().authenticated()
             )
