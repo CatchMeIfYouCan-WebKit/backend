@@ -16,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -58,6 +59,20 @@ public class PetController {
 
         return ResponseEntity.ok(petService.add(pet, userId));
     }
+
+
+    // 이미지 업로드
+    @CrossOrigin(origins = "http://10.0.2.2:5173")
+    @PostMapping(value = "/image-upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, String>> upload(@RequestParam("file") MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("파일이 비어 있습니다.");
+        }
+
+        String photoPath = fileService.save(file); // 예: /uploads/xxx.jpg
+        return ResponseEntity.ok(Map.of("photoPath", photoPath));
+    }
+
 
     // 내 반려동물 전체 조회
     @GetMapping("/all")

@@ -87,8 +87,7 @@ public class Pet {
     @NotNull(message = "몸무게는 필수입니다.")
     private BigDecimal weight;
 
-    @Column(name = "registration_number", nullable = false, unique = true, length = 100)
-    @NotBlank(message = "REF는 필수입니다.")
+    @Column(name = "registration_number", unique = true, length = 100)
     private String registrationNumber;
 
     @Column(name = "created_at", updatable = false)
