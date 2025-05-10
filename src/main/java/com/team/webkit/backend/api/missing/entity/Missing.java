@@ -16,6 +16,9 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -75,4 +78,11 @@ public class Missing {
     @Column(name = "updated_at")
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+    public List<String> getPhotoUrls() {
+        if (photoUrl == null || photoUrl.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return Arrays.asList(photoUrl.split(","));
+    }
 }

@@ -5,8 +5,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -52,4 +55,15 @@ public class FileService {
             throw new RuntimeException("파일 저장 실패", e);
         }
     }
+
+    public List<String> saveAll(List<MultipartFile> files) {
+        if (files == null || files.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return files.stream()
+            .map(this::save)
+            .collect(Collectors.toList());
+    }
+
 }

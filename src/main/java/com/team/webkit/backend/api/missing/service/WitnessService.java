@@ -24,7 +24,7 @@ public class WitnessService {
     private final PetRepository petRepository;
 
     // 목격 게시글 등록
-    public WitnessResponse createWitness(WitnessRequest req, Integer userId) {
+    public WitnessResponse createWitness(WitnessRequest req) {
         log.info("목격 게시글 등록 요청: {}", req);
 
         Integer currentUserId = (Integer) SecurityContextHolder.getContext().getAuthentication()
@@ -39,19 +39,23 @@ public class WitnessService {
         Missing post = new Missing();
         post.setMember(member);
         post.setPostType(Missing.PostType.witness);
-        post.setPhotoUrl(req.photoUrl);
+        // ✅ URL 목록을 ,로 연결해서 하나의 컬럼에 저장
+        if (req.getPhotoUrls() != null && !req.getPhotoUrls().isEmpty()) {
+            post.setPhotoUrl(String.join(",", req.getPhotoUrls()));
+        }
         post.setMissingDatetime(req.witnessDatetime);
         post.setMissingLocation(req.witnessLocation);
         post.setDetailDescription(req.detailDescription);
 
         Missing saved = missingRepository.save(post);
         log.info("목격 게시글 등록 완료 (ID: {})", saved.getId());
+        log.info("request.photoUrl: " + req.photoUrls);
 
         return WitnessResponse.from(saved);
     }
 
     // 목격 게시글 수정
-    public WitnessResponse updateWitness(Long id, WitnessRequest req) {
+/*    public WitnessResponse updateWitness(Long id, WitnessRequest req) {
         log.info("목격 게시글 수정 요청 (ID: {}, 데이터: {})", id, req);
 
         Integer currentUserId = (Integer) SecurityContextHolder.getContext()
@@ -69,11 +73,11 @@ public class WitnessService {
         post.setPostType(Missing.PostType.witness);
 
         // 기존 사진 유지
-        if (req.photoUrl == null || req.photoUrl.isBlank()) {
-            req.photoUrl = post.getPhotoUrl();
+        if (req.photoUrls == null || req.photoUrls.isBlank()) {
+            req.photoUrls = post.getPhotoUrl();
         }
 
-        post.setPhotoUrl(req.photoUrl);
+        post.setPhotoUrl(req.photoUrls);
         post.setMissingDatetime(req.witnessDatetime);
         post.setMissingLocation(req.witnessLocation);
         post.setDetailDescription(req.detailDescription);
@@ -82,6 +86,7 @@ public class WitnessService {
         log.info("목격 게시글 수정 완료 (ID: {})", updated.getId());
 
         return WitnessResponse.from(updated);
+<<<<<<< HEAD
     }
 
     //목격 불러오기 비즈니스 로직(예찬)
@@ -91,4 +96,7 @@ public class WitnessService {
                 .collect(Collectors.toList());
     }
 
+=======
+    }*/
+>>>>>>> fcaae57eba11e73096a04386391cb29e96984b0f
 }
