@@ -8,13 +8,12 @@ import com.team.webkit.backend.api.missing.dto.WitnessResponse;
 import com.team.webkit.backend.api.missing.service.WitnessService;
 import com.team.webkit.backend.api.pet.service.FileService;
 import com.team.webkit.backend.support.annotation.MSP;
+import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -35,20 +34,21 @@ public class WitnessController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<WitnessResponse> createWitness(
         @RequestPart("post") String witnessJson,
-        @RequestPart(value = "file", required = false) MultipartFile file)
-        throws JsonProcessingException {
-
+        @RequestPart(value = "files", required = false) List<MultipartFile> files
+    ) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         WitnessRequest request = mapper.readValue(witnessJson, WitnessRequest.class);
 
-        if (file != null && !file.isEmpty()) {
-            request.photoUrl = fileService.save(file);
+        if (files != null && !files.isEmpty()) {
+            List<String> paths = files.stream()
+                .map(fileService::save)
+                .toList();
+            request.setPhotoUrls(paths);
         }
 
-        Integer userId = (Integer) SecurityContextHolder.getContext().getAuthentication()
-            .getPrincipal();
-        return ResponseEntity.ok(witnessService.createWitness(request, userId));
+        WitnessResponse response = witnessService.createWitness(request);
+        return ResponseEntity.ok(response);
     }
 
     // 이미지 업로드
@@ -63,9 +63,8 @@ public class WitnessController {
         return ResponseEntity.ok(Map.of("photoPath", photoPath));
     }
 
-
     // 목격 게시글 수정
-    @PostMapping(value = "/{id}/witness", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+/*    @PostMapping(value = "/{id}/witness", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<WitnessResponse> updateWitness(
         @PathVariable Long id,
         @RequestPart("post") String witnessJson,
@@ -77,9 +76,9 @@ public class WitnessController {
         WitnessRequest request = mapper.readValue(witnessJson, WitnessRequest.class);
 
         if (file != null && !file.isEmpty()) {
-            request.photoUrl = fileService.save(file);
+            request.photoUrls = fileService.save(file);
         }
 
         return ResponseEntity.ok(witnessService.updateWitness(id, request));
-    }
+    }*/
 }

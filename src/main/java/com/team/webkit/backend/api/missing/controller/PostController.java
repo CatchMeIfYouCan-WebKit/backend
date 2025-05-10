@@ -2,7 +2,6 @@ package com.team.webkit.backend.api.missing.controller;
 
 import com.team.webkit.backend.api.missing.dto.MissingResponse;
 import com.team.webkit.backend.api.missing.service.PostService;
-import com.team.webkit.backend.api.pet.service.FileService;
 import com.team.webkit.backend.support.annotation.MSP;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class PostController {
 
     private final PostService postService;
-    private final FileService fileService;
 
     // 게시글 전체 조회
     @GetMapping
