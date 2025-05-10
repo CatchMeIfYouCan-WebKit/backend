@@ -55,7 +55,8 @@ public class WitnessService {
     }
 
     // 목격 게시글 수정
-/*    public WitnessResponse updateWitness(Long id, WitnessRequest req) {
+    /*
+    public WitnessResponse updateWitness(Long id, WitnessRequest req) {
         log.info("목격 게시글 수정 요청 (ID: {}, 데이터: {})", id, req);
 
         Integer currentUserId = (Integer) SecurityContextHolder.getContext()
@@ -86,17 +87,14 @@ public class WitnessService {
         log.info("목격 게시글 수정 완료 (ID: {})", updated.getId());
 
         return WitnessResponse.from(updated);
-<<<<<<< HEAD
     }
+    */
 
-    //목격 불러오기 비즈니스 로직(예찬)
+    // 목격 불러오기 비즈니스 로직 (예찬)
     public List<WitnessResponse> getAllWitnessPosts() {
         return missingRepository.findByPostType(Missing.PostType.witness).stream()
                 .map(WitnessResponse::from)
                 .collect(Collectors.toList());
     }
-
-=======
-    }*/
->>>>>>> fcaae57eba11e73096a04386391cb29e96984b0f
 }
+

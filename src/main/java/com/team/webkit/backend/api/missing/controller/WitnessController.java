@@ -8,26 +8,14 @@ import com.team.webkit.backend.api.missing.dto.WitnessResponse;
 import com.team.webkit.backend.api.missing.service.WitnessService;
 import com.team.webkit.backend.api.pet.service.FileService;
 import com.team.webkit.backend.support.annotation.MSP;
-<<<<<<< HEAD
 
-=======
->>>>>>> fcaae57eba11e73096a04386391cb29e96984b0f
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-<<<<<<< HEAD
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-=======
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
->>>>>>> fcaae57eba11e73096a04386391cb29e96984b0f
 import org.springframework.web.multipart.MultipartFile;
 
 @MSP
@@ -42,8 +30,8 @@ public class WitnessController {
     // 목격 게시글 등록
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<WitnessResponse> createWitness(
-        @RequestPart("post") String witnessJson,
-        @RequestPart(value = "files", required = false) List<MultipartFile> files
+            @RequestPart("post") String witnessJson,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files
     ) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
@@ -51,8 +39,8 @@ public class WitnessController {
 
         if (files != null && !files.isEmpty()) {
             List<String> paths = files.stream()
-                .map(fileService::save)
-                .toList();
+                    .map(fileService::save)
+                    .toList();
             request.setPhotoUrls(paths);
         }
 
@@ -72,8 +60,8 @@ public class WitnessController {
         return ResponseEntity.ok(Map.of("photoPath", photoPath));
     }
 
-    // 목격 게시글 수정
-/*    @PostMapping(value = "/{id}/witness", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    /*
+    @PostMapping(value = "/{id}/witness", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<WitnessResponse> updateWitness(
         @PathVariable Long id,
         @RequestPart("post") String witnessJson,
@@ -89,17 +77,12 @@ public class WitnessController {
         }
 
         return ResponseEntity.ok(witnessService.updateWitness(id, request));
-<<<<<<< HEAD
     }
+    */
 
     // 지도 불러오기 목격 응답 API 추가 (예찬)
     @GetMapping("/witness-posts")
     public ResponseEntity<List<WitnessResponse>> getWitnessPosts() {
         return ResponseEntity.ok(witnessService.getAllWitnessPosts());
     }
-
-
-=======
-    }*/
->>>>>>> fcaae57eba11e73096a04386391cb29e96984b0f
 }
