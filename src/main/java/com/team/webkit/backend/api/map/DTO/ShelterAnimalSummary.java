@@ -20,4 +20,7 @@ public class ShelterAnimalSummary {
     private String neutered;           // 중성화 여부 ("예" / "아니오")
     private String status;             // 상태 ("공고중", "보호중" 등)
     private LocalDate announceEnd;     // 공고 종료일 (선택)
+
+    private String imageUrl;           // 사진 (또는 imageUrls 중 첫 번째)
+    private String ageWeight;
 }

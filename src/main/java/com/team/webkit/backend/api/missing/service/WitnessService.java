@@ -11,6 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -80,4 +83,12 @@ public class WitnessService {
 
         return WitnessResponse.from(updated);
     }
+
+    //목격 불러오기 비즈니스 로직(예찬)
+    public List<WitnessResponse> getAllWitnessPosts() {
+        return missingRepository.findByPostType(Missing.PostType.witness).stream()
+                .map(WitnessResponse::from)
+                .collect(Collectors.toList());
+    }
+
 }

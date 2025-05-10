@@ -27,7 +27,10 @@ public class WitnessResponse {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     public LocalDateTime updatedAt;
 
-
+    //추가된 필드 입니다(예찬)
+    public String address;     // witnessLocation을 복사해서 사용
+    public String breed;
+    public String coatColor;
     public static WitnessResponse from(Missing post) {
         WitnessResponse res = new WitnessResponse();
 
@@ -40,6 +43,10 @@ public class WitnessResponse {
         res.detailDescription = post.getDetailDescription();
         res.createdAt = post.getCreatedAt();
         res.updatedAt = post.getUpdatedAt();
+
+        res.address = post.getMissingLocation();             // 주소용 필드로 중복 사용
+        res.breed = post.getPet().getBreed();
+        res.coatColor = post.getPet().getCoatColor();
 
         return res;
     }

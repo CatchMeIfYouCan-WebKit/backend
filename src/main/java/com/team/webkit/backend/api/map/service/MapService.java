@@ -49,14 +49,15 @@ public class MapService {
             String key = announcement.getShelterName();
 
             ShelterAnimalSummary summary = new ShelterAnimalSummary(
-                announcement.getBreed(),
-                announcement.getCoatColor(),
-                announcement.getGender(),
-                announcement.getNeutered(),
-                "보호중", // 상태는 임의 설정
-                announcement.getAnnounceEnd()
+                    announcement.getBreed(),
+                    announcement.getCoatColor(),
+                    announcement.getGender(),
+                    announcement.getNeutered(),
+                    "보호중", // 상태
+                    announcement.getAnnounceEnd(),
+                    announcement.getImageUrl(), // ✅ 새로 추가한 이미지 URL
+                    null                        // ✅ 나이/체중은 해당 엔티티엔 없으므로 null
             );
-
             shelterMap.computeIfAbsent(key, k -> ShelterResponse.builder()
                 .shelterName(announcement.getShelterName())
                 .phone(announcement.getPhone())
@@ -76,13 +77,16 @@ public class MapService {
             String key = adoption.getShelterName();
 
             ShelterAnimalSummary summary = new ShelterAnimalSummary(
-                adoption.getBreed(),
-                adoption.getColor(),
-                adoption.getGender(),
-                adoption.getNeutered(),
-                adoption.getStatus(),
-                null // announceEnd가 없으니 null 처리
+                    adoption.getBreed(),
+                    adoption.getColor(),
+                    adoption.getGender(),
+                    adoption.getNeutered(),
+                    adoption.getStatus(),
+                    null,                          // 공고 종료일 없음
+                    adoption.getImageUrls(),       // ✅ 이미지 URL들 (하나만 보일 거면 앞에서 split 해도 됨)
+                    adoption.getAgeWeight()        // ✅ 나이/체중
             );
+
 
             shelterMap.computeIfAbsent(key, k -> ShelterResponse.builder()
                 .shelterName(adoption.getShelterName())

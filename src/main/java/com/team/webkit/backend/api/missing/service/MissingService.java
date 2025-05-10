@@ -11,6 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -96,6 +99,12 @@ public class MissingService {
         log.info("게시글 수정 완료 (ID: {})", updated.getId());
 
         return MissingResponse.from(updated);
+    }
+    //실종 불러오기 데이터 비즈니스 로직 추가(예찬)
+    public List<MissingResponse> getAllMissingPosts() {
+        return missingRepository.findAll().stream()
+                .map(MissingResponse::from)
+                .collect(Collectors.toList());
     }
 
 
