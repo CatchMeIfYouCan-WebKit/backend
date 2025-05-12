@@ -12,6 +12,10 @@ public class WitnessResponse {
 
     public Integer userId;
 
+    public String userNickname;
+
+    public String userPhone;
+
     public String photoUrl;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
@@ -31,12 +35,15 @@ public class WitnessResponse {
     public String address;     // witnessLocation을 복사해서 사용
     public String breed;
     public String coatColor;
+
     public static WitnessResponse from(Missing post) {
         WitnessResponse res = new WitnessResponse();
 
         res.id = post.getId();
         res.postType = post.getPostType().name();
         res.userId = post.getMember().getId();
+        res.userNickname = post.getMember().getNickname();
+        res.userPhone = post.getMember().getPhone();
         res.photoUrl = post.getPhotoUrl();
         res.witnessDatetime = post.getMissingDatetime();
         res.witnessLocation = post.getMissingLocation();
@@ -49,7 +56,6 @@ public class WitnessResponse {
             res.breed = post.getPet().getBreed();
             res.coatColor = post.getPet().getCoatColor();
         }
-
 
         return res;
     }

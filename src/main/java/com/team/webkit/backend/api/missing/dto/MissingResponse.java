@@ -12,6 +12,10 @@ public class MissingResponse {
 
     public Integer userId;
 
+    public String userNickname;
+
+    public String userPhone;
+
     public Integer petId;
 
     public String photoUrl;
@@ -41,6 +45,8 @@ public class MissingResponse {
         res.id = post.getId();
         res.postType = post.getPostType().name();
         res.userId = post.getMember().getId();
+        res.userNickname = post.getMember().getNickname();
+        res.userPhone = post.getMember().getPhone();
         res.petId = post.getPet().getId();
         res.photoUrl = post.getPhotoUrl();
         res.missingDatetime = post.getMissingDatetime();
@@ -52,7 +58,6 @@ public class MissingResponse {
         res.address = post.getMissingLocation(); // 주소로 사용
         res.breed = post.getPet().getBreed();
         res.coatColor = post.getPet().getCoatColor();
-
 
         return res;
     }

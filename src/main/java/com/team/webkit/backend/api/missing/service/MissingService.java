@@ -6,13 +6,12 @@ import com.team.webkit.backend.api.missing.dto.MissingResponse;
 import com.team.webkit.backend.api.missing.entity.Missing;
 import com.team.webkit.backend.api.missing.repository.MissingRepository;
 import com.team.webkit.backend.api.pet.repository.PetRepository;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -60,6 +59,44 @@ public class MissingService {
     }
 
 
+    // 실종 게시글 상세조회
+    public MissingResponse getMissingPostById(Long id) {
+        log.info("실종 게시글 상세 조회 요청: 게시글 ID={}", id);
+
+        return missingRepository.findById(id)
+            .map(post -> {
+                MissingResponse response = MissingResponse.from(post);
+                log.info(
+                    "게시글 조회 성공: [ID: {}], [작성자 ID: {}], [PostType: {}], [UserID: {}], [PetID: {}], [PhotoURL: {}], "
+                        +
+                        "[MissingDatetime: {}], [MissingLocation: {}], [DetailDescription: {}], [Address: {}], "
+                        +
+                        "[Breed: {}], [CoatColor: {}], [CreatedAt: {}], [UpdatedAt: {}], [UserNickname: {}], [UserPhone: {}]",
+                    response.id,
+                    response.userId,
+                    response.postType,
+                    response.userId,
+                    response.petId,
+                    response.photoUrl,
+                    response.missingDatetime,
+                    response.missingLocation,
+                    response.detailDescription,
+                    response.address,
+                    response.breed,
+                    response.coatColor,
+                    response.createdAt,
+                    response.updatedAt,
+                    response.userNickname,
+                    response.userPhone
+                );
+                return response;
+            })
+            .orElseThrow(() -> {
+                log.error("게시글 조회 실패: 존재하지 않는 게시글 ID={}", id);
+                return new RuntimeException("게시글을 찾을 수 없습니다.");
+            });
+    }
+
 //    // 실종 게시글 수정
 //    public MissingResponse updateMissing(Long id, MissingRequest req) {
 //        log.info("게시글 수정 요청 (ID: {}, 데이터: {})", id, req);
@@ -100,6 +137,8 @@ public class MissingService {
 //
 //        return MissingResponse.from(updated);
 //    }
+
+
     //실종 불러오기 데이터 비즈니스 로직 추가(예찬)
     public List<MissingResponse> getAllMissingPosts() {
         return missingRepository.findByPostType(Missing.PostType.missing)

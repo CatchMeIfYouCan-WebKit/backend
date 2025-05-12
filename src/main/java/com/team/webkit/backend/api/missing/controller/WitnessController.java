@@ -8,14 +8,19 @@ import com.team.webkit.backend.api.missing.dto.WitnessResponse;
 import com.team.webkit.backend.api.missing.service.WitnessService;
 import com.team.webkit.backend.support.FileService;
 import com.team.webkit.backend.support.annotation.MSP;
-
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @MSP
@@ -30,8 +35,8 @@ public class WitnessController {
     // 목격 게시글 등록
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<WitnessResponse> createWitness(
-            @RequestPart("post") String witnessJson,
-            @RequestPart(value = "files", required = false) List<MultipartFile> files
+        @RequestPart("post") String witnessJson,
+        @RequestPart(value = "files", required = false) List<MultipartFile> files
     ) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
@@ -39,8 +44,8 @@ public class WitnessController {
 
         if (files != null && !files.isEmpty()) {
             List<String> paths = files.stream()
-                    .map(fileService::save)
-                    .toList();
+                .map(fileService::save)
+                .toList();
             request.setPhotoUrls(paths);
         }
 
@@ -60,6 +65,11 @@ public class WitnessController {
         return ResponseEntity.ok(Map.of("photoPath", photoPath));
     }
 
+    // 목격 게시글 상세조회
+    @GetMapping("/{id}")
+    public ResponseEntity<WitnessResponse> getWitnessPost(@PathVariable Long id) {
+        return ResponseEntity.ok(witnessService.getWitnessPostById(id));
+    }
 
 //    @PostMapping(value = "/{id}/witness", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 //    public ResponseEntity<WitnessResponse> updateWitness(

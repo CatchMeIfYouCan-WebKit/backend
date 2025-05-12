@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class PostService {
 
-    private MissingRepository missingRepository;
+    private final MissingRepository missingRepository;
 
     // 게시글 전체 조회
     public List<MissingResponse> getAll() {
