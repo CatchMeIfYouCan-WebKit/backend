@@ -1,6 +1,7 @@
 package com.team.webkit.backend.config;
 
 import com.team.webkit.backend.api.member.entity.Member;
+import com.team.webkit.backend.api.vet.entity.Vet;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -34,15 +35,20 @@ public class JwtUtil {
         this.accessTokenExpTime = accessTokenExpTime;
     }
 
-    // access token 생성
+    // Access Token : Vet
+    public String createAccessToken(Vet vet) {
+        return createToken(vet.getId(), accessTokenExpTime);
+    }
+
+    // Access Token : Member
     public String createAccessToken(Member member) {
-        return createToken(member, accessTokenExpTime);
+        return createToken(member.getId(), accessTokenExpTime);
     }
 
     // jwt 생성
-    private String createToken(Member member, long expireTime) {
+    private String createToken(Integer userId, long expireTime) {
         Claims claims = Jwts.claims();
-        claims.put("id", member.getId());
+        claims.put("id", userId);
 
         ZonedDateTime now = ZonedDateTime.now();
         ZonedDateTime tokenValidity = now.plusSeconds(expireTime);

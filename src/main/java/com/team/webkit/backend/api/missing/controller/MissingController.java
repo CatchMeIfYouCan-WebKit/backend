@@ -6,7 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.team.webkit.backend.api.missing.dto.MissingRequest;
 import com.team.webkit.backend.api.missing.dto.MissingResponse;
 import com.team.webkit.backend.api.missing.service.MissingService;
-import com.team.webkit.backend.api.pet.service.FileService;
+import com.team.webkit.backend.support.FileService;
 import com.team.webkit.backend.support.annotation.MSP;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
