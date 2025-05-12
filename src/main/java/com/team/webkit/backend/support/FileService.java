@@ -13,6 +13,8 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+// 사진
+
 @Service
 public class FileService {
 
