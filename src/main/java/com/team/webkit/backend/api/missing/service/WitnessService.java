@@ -55,40 +55,40 @@ public class WitnessService {
     }
 
     // 목격 게시글 수정
-    /*
-    public WitnessResponse updateWitness(Long id, WitnessRequest req) {
-        log.info("목격 게시글 수정 요청 (ID: {}, 데이터: {})", id, req);
 
-        Integer currentUserId = (Integer) SecurityContextHolder.getContext()
-            .getAuthentication().getPrincipal();
+//    public WitnessResponse updateWitness(Long id, WitnessRequest req) {
+//        log.info("목격 게시글 수정 요청 (ID: {}, 데이터: {})", id, req);
+//
+//        Integer currentUserId = (Integer) SecurityContextHolder.getContext()
+//            .getAuthentication().getPrincipal();
+//
+//        Missing post = missingRepository.findById(id)
+//            .orElseThrow(() -> new RuntimeException("해당 게시글을 찾을 수 없습니다."));
+//
+//        if (!post.getMember().getId().equals(currentUserId)) {
+//            log.warn("수정 권한 없음 - 요청자 ID: {}, 작성자 ID: {}", currentUserId, post.getMember().getId());
+//            throw new RuntimeException("게시글 작성자만 수정할 수 있습니다.");
+//        }
+//
+//        // postType 고정
+//        post.setPostType(Missing.PostType.witness);
+//
+//        // 기존 사진 유지
+//        if (req.photoUrls == null || req.photoUrls.isBlank()) {
+//            req.photoUrls = post.getPhotoUrl();
+//        }
+//
+//        post.setPhotoUrl(req.photoUrls);
+//        post.setMissingDatetime(req.witnessDatetime);
+//        post.setMissingLocation(req.witnessLocation);
+//        post.setDetailDescription(req.detailDescription);
+//
+//        Missing updated = missingRepository.save(post);
+//        log.info("목격 게시글 수정 완료 (ID: {})", updated.getId());
+//
+//        return WitnessResponse.from(updated);
+//    }
 
-        Missing post = missingRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("해당 게시글을 찾을 수 없습니다."));
-
-        if (!post.getMember().getId().equals(currentUserId)) {
-            log.warn("수정 권한 없음 - 요청자 ID: {}, 작성자 ID: {}", currentUserId, post.getMember().getId());
-            throw new RuntimeException("게시글 작성자만 수정할 수 있습니다.");
-        }
-
-        // postType 고정
-        post.setPostType(Missing.PostType.witness);
-
-        // 기존 사진 유지
-        if (req.photoUrls == null || req.photoUrls.isBlank()) {
-            req.photoUrls = post.getPhotoUrl();
-        }
-
-        post.setPhotoUrl(req.photoUrls);
-        post.setMissingDatetime(req.witnessDatetime);
-        post.setMissingLocation(req.witnessLocation);
-        post.setDetailDescription(req.detailDescription);
-
-        Missing updated = missingRepository.save(post);
-        log.info("목격 게시글 수정 완료 (ID: {})", updated.getId());
-
-        return WitnessResponse.from(updated);
-    }
-    */
 
     // 목격 불러오기 비즈니스 로직 (예찬)
     public List<WitnessResponse> getAllWitnessPosts() {

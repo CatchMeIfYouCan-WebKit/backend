@@ -60,25 +60,25 @@ public class WitnessController {
         return ResponseEntity.ok(Map.of("photoPath", photoPath));
     }
 
-    /*
-    @PostMapping(value = "/{id}/witness", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<WitnessResponse> updateWitness(
-        @PathVariable Long id,
-        @RequestPart("post") String witnessJson,
-        @RequestPart(value = "file", required = false) MultipartFile file
-    ) throws JsonProcessingException {
 
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        WitnessRequest request = mapper.readValue(witnessJson, WitnessRequest.class);
+//    @PostMapping(value = "/{id}/witness", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//    public ResponseEntity<WitnessResponse> updateWitness(
+//        @PathVariable Long id,
+//        @RequestPart("post") String witnessJson,
+//        @RequestPart(value = "file", required = false) MultipartFile file
+//    ) throws JsonProcessingException {
+//
+//        ObjectMapper mapper = new ObjectMapper();
+//        mapper.registerModule(new JavaTimeModule());
+//        WitnessRequest request = mapper.readValue(witnessJson, WitnessRequest.class);
+//
+//        if (file != null && !file.isEmpty()) {
+//            request.photoUrls = fileService.save(file);
+//        }
+//
+//        return ResponseEntity.ok(witnessService.updateWitness(id, request));
+//    }
 
-        if (file != null && !file.isEmpty()) {
-            request.photoUrls = fileService.save(file);
-        }
-
-        return ResponseEntity.ok(witnessService.updateWitness(id, request));
-    }
-    */
 
     // 지도 불러오기 목격 응답 API 추가 (예찬)
     @GetMapping("/witness-posts")

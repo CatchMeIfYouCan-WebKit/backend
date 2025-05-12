@@ -60,51 +60,52 @@ public class MissingService {
     }
 
 
-    // 실종 게시글 수정
-    public MissingResponse updateMissing(Long id, MissingRequest req) {
-        log.info("게시글 수정 요청 (ID: {}, 데이터: {})", id, req);
-
-        Integer currentUserId = (Integer) SecurityContextHolder.getContext().getAuthentication()
-            .getPrincipal();
-
-        Missing post = missingRepository.findById(id)
-            .orElseThrow(() -> {
-                log.error("게시글 없음 - ID: {}", id);
-                return new RuntimeException("해당 게시글을 찾을 수 없습니다.");
-            });
-
-        if (!post.getMember().getId().equals(currentUserId)) {
-            log.warn("수정 권한 없음 - 요청자 ID: {}, 게시글 작성자 ID: {}", currentUserId,
-                post.getMember().getId());
-            throw new RuntimeException("게시글 작성자만 수정할 수 있습니다.");
-        }
-
-        if (req.photoUrl == null || req.photoUrl.isBlank()) {
-            req.photoUrl = post.getPhotoUrl();
-        }
-
-        try {
-            post.setPostType(Missing.PostType.valueOf(req.postType));
-        } catch (IllegalArgumentException e) {
-            log.error("유효하지 않은 postType 값: {}", req.postType);
-            throw new RuntimeException("postType 값이 잘못되었습니다.");
-        }
-
-        post.setPhotoUrl(req.photoUrl);
-        post.setMissingDatetime(req.missingDatetime);
-        post.setMissingLocation(req.missingLocation);
-        post.setDetailDescription(req.detailDescription);
-
-        Missing updated = missingRepository.save(post);
-        log.info("게시글 수정 완료 (ID: {})", updated.getId());
-
-        return MissingResponse.from(updated);
-    }
+//    // 실종 게시글 수정
+//    public MissingResponse updateMissing(Long id, MissingRequest req) {
+//        log.info("게시글 수정 요청 (ID: {}, 데이터: {})", id, req);
+//
+//        Integer currentUserId = (Integer) SecurityContextHolder.getContext().getAuthentication()
+//            .getPrincipal();
+//
+//        Missing post = missingRepository.findById(id)
+//            .orElseThrow(() -> {
+//                log.error("게시글 없음 - ID: {}", id);
+//                return new RuntimeException("해당 게시글을 찾을 수 없습니다.");
+//            });
+//
+//        if (!post.getMember().getId().equals(currentUserId)) {
+//            log.warn("수정 권한 없음 - 요청자 ID: {}, 게시글 작성자 ID: {}", currentUserId,
+//                post.getMember().getId());
+//            throw new RuntimeException("게시글 작성자만 수정할 수 있습니다.");
+//        }
+//
+//        if (req.photoUrl == null || req.photoUrl.isBlank()) {
+//            req.photoUrl = post.getPhotoUrl();
+//        }
+//
+//        try {
+//            post.setPostType(Missing.PostType.valueOf(req.postType));
+//        } catch (IllegalArgumentException e) {
+//            log.error("유효하지 않은 postType 값: {}", req.postType);
+//            throw new RuntimeException("postType 값이 잘못되었습니다.");
+//        }
+//
+//        post.setPhotoUrl(req.photoUrl);
+//        post.setMissingDatetime(req.missingDatetime);
+//        post.setMissingLocation(req.missingLocation);
+//        post.setDetailDescription(req.detailDescription);
+//
+//        Missing updated = missingRepository.save(post);
+//        log.info("게시글 수정 완료 (ID: {})", updated.getId());
+//
+//        return MissingResponse.from(updated);
+//    }
     //실종 불러오기 데이터 비즈니스 로직 추가(예찬)
     public List<MissingResponse> getAllMissingPosts() {
-        return missingRepository.findAll().stream()
-                .map(MissingResponse::from)
-                .collect(Collectors.toList());
+        return missingRepository.findByPostType(Missing.PostType.missing)
+            .stream()
+            .map(MissingResponse::from)
+            .collect(Collectors.toList());
     }
 
 
