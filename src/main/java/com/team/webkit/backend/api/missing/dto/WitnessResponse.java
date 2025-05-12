@@ -43,10 +43,13 @@ public class WitnessResponse {
         res.detailDescription = post.getDetailDescription();
         res.createdAt = post.getCreatedAt();
         res.updatedAt = post.getUpdatedAt();
+        //추가된 필드(예찬)
+        res.address = post.getMissingLocation();
+        if (post.getPet() != null) {
+            res.breed = post.getPet().getBreed();
+            res.coatColor = post.getPet().getCoatColor();
+        }
 
-        res.address = post.getMissingLocation();             // 주소용 필드로 중복 사용
-        res.breed = post.getPet().getBreed();
-        res.coatColor = post.getPet().getCoatColor();
 
         return res;
     }

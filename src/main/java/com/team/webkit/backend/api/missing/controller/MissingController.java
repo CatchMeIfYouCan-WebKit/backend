@@ -45,23 +45,23 @@ public class MissingController {
     }
 
 
-    // 실종 게시글 수정
-    @PostMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<MissingResponse> updateMissing(@PathVariable Long id,
-        @RequestPart("post") String missingJson,
-        @RequestPart(value = "file", required = false) MultipartFile file)
-        throws JsonProcessingException {
-
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        MissingRequest request = mapper.readValue(missingJson, MissingRequest.class);
-
-        if (file != null && !file.isEmpty()) {
-            request.photoUrl = fileService.save(file);
-        }
-
-        return ResponseEntity.ok(missingService.updateMissing(id, request));
-    }
+//    // 실종 게시글 수정
+//    @PostMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//    public ResponseEntity<MissingResponse> updateMissing(@PathVariable Long id,
+//        @RequestPart("post") String missingJson,
+//        @RequestPart(value = "file", required = false) MultipartFile file)
+//        throws JsonProcessingException {
+//
+//        ObjectMapper mapper = new ObjectMapper();
+//        mapper.registerModule(new JavaTimeModule());
+//        MissingRequest request = mapper.readValue(missingJson, MissingRequest.class);
+//
+//        if (file != null && !file.isEmpty()) {
+//            request.photoUrl = fileService.save(file);
+//        }
+//
+//        return ResponseEntity.ok(missingService.updateMissing(id, request));
+//    }
     //지도 불러오기 추가(예찬)
     @GetMapping("/missing-posts")
     public ResponseEntity<List<MissingResponse>> getMissingPosts() {
