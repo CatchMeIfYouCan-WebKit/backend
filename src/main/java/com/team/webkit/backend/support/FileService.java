@@ -67,5 +67,40 @@ public class FileService {
             .map(this::save)
             .collect(Collectors.toList());
     }
+    //입양 게시판 이미지 업로드 추가(예찬)
+    // adoptUploads 폴더에 이미지 저장하는 메서드
+    public String saveAdoptImage(MultipartFile file) {
+        return saveToSubFolder(file, "adoptUploads");
+    }
+
+    // 하위 폴더를 지정해서 저장할 수 있는 공통 메서드
+    public String saveToSubFolder(MultipartFile file, String subFolder) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("빈 파일입니다.");
+        }
+
+        try {
+            String ext = Optional.ofNullable(file.getOriginalFilename())
+                    .filter(f -> f.contains("."))
+                    .map(f -> f.substring(f.lastIndexOf(".")))
+                    .orElse(".jpg");
+
+            String fileName = UUID.randomUUID() + ext;
+
+            Path savePath = Paths.get(System.getProperty("user.dir"), "uploads", subFolder, fileName)
+                    .toAbsolutePath()
+                    .normalize();
+
+            Files.createDirectories(savePath.getParent());
+            Files.copy(file.getInputStream(), savePath, StandardCopyOption.REPLACE_EXISTING);
+
+            System.out.println("[FileService] 저장된 adopt 파일 경로: " + savePath);
+            return "/uploads/" + subFolder + "/" + fileName;
+
+        } catch (IOException e) {
+            throw new RuntimeException("파일 저장 실패: " + e.getMessage(), e);
+        }
+    }
+
 
 }

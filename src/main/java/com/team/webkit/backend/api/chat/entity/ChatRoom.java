@@ -1,5 +1,6 @@
 package com.team.webkit.backend.api.chat.entity;
 
+import com.team.webkit.backend.api.adopt.entity.AdoptPost;
 import com.team.webkit.backend.api.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
@@ -7,48 +8,33 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "chat_rooms",
+        uniqueConstraints = @UniqueConstraint(name = "unique_chat", columnNames = {"sender_id", "receiver_id", "adopt_post_id"}))
 @Getter
-@Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-@Table(
-        name = "chat_rooms", // ✅ 실제 DB 테이블 이름과 일치시킴
-        uniqueConstraints = @UniqueConstraint(columnNames = {"user1_id", "user2_id", "type", "related_id"})
-)
 public class ChatRoom {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 참여자 A
+    // 보내는 사람
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user1_id")
-    private Member user1;
+    @JoinColumn(name = "sender_id", nullable = false)
+    private Member sender;
 
-    // 참여자 B
+    // 받는 사람
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user2_id")
-    private Member user2;
+    @JoinColumn(name = "receiver_id", nullable = false)
+    private Member receiver;
 
-    // ADOPTION 또는 VET
-    @Enumerated(EnumType.STRING)
-    private ChatType type;
+    // 어떤 입양 게시글에서의 채팅인지
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "adopt_post_id", nullable = false)
+    private AdoptPost adoptPost;
 
-    // 입양 게시글 or 진료 예약과 연동됨
-    @Column(name = "related_id")
-    private Long relatedId;
-
-    private LocalDateTime createdAt;
-
-    public enum ChatType {
-        ADOPTION,
-        VET
-    }
-
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-    }
+    @Column(name = "created_at", columnDefinition = "DATETIME", updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 }

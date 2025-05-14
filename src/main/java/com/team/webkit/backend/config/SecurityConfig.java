@@ -32,10 +32,9 @@ public class SecurityConfig {
                     "/api/member/duplicate", "/api/member/info", "/api/member/duplicate/nickname",
                     "/api/member/password", "/api/map/**", "/error", "/uploads/**",
                     "/default-image.png", "api/animal-profile/**", "/ws/**", "/topic/**",
-                    "/queue/**",
-                    "/user/**", "/api/chat/messages", "api/posts/witness/image-upload",
-                    "api/posts/**",
-                    "/api/vet/**", "/api/hospitals/**", "/api/appointments/**")
+                    "/queue/**", "/user/**", "/api/chat/messages", "api/posts/witness/image-upload",
+                    "api/posts/**", "/api/vet/**", "/api/hospitals/**", "/api/appointments/**","/images/**",
+                        "/api/chat/messages", "api/posts/witness/image-upload","api/posts/**","api/adopt/**","api/chat/**")
 
                 .permitAll()
                 .anyRequest().authenticated()
