@@ -57,8 +57,16 @@ public class VetController {
         return ResponseEntity.ok(VetResponseDto.fromEntity(vet));
     }
 
+    // 아이디 중복 검사
+    @GetMapping("/check-id")
+    public ResponseEntity<Map<String, Boolean>> checkDuplicateId(@RequestParam String loginId) {
+        boolean exists = vetService.existsByLoginId(loginId);
+        return ResponseEntity.ok(Map.of("exists", exists));
+    }
+
+
     // 이미지 업로드
-    @CrossOrigin(origins = "http://10.0.2.2:5173")
+    @CrossOrigin(origins = "http://10.0.2.2:5174")
     @PostMapping(value = "/image-upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, String>> upload(@RequestParam("file") MultipartFile file) {
         if (file == null || file.isEmpty()) {

@@ -57,8 +57,8 @@ public class Vet {
     @Column(name = "career")
     private String career;
 
-    @Column(name = "has_certificate")
-    private Boolean hasCertificate;
+    @Column(name = "certificate")
+    private String certificate;
 
     @Column(name = "introduction", columnDefinition = "TEXT")
     private String introduction;

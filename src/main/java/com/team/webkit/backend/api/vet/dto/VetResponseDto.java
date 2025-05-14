@@ -20,7 +20,7 @@ public class VetResponseDto {
 
     private String name;
 
-    private Boolean hasCertificate;
+    private String certificate;
 
     private String licenseNumber;
 
@@ -45,7 +45,7 @@ public class VetResponseDto {
         dto.loginId = vet.getLoginId();
         dto.phone = vet.getPhone();
         dto.name = vet.getName();
-        dto.hasCertificate = vet.getHasCertificate();
+        dto.certificate = vet.getCertificate();
         dto.licenseNumber = vet.getLicenseNumber();
         dto.hospitalId = vet.getHospitalId();
         dto.career = vet.getCareer();

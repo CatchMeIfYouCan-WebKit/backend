@@ -14,7 +14,7 @@ public class VetRequestDto {
     private String password; // 비밀번호
     private String phone; // 전화번호
     private String name; // 이름
-    private Boolean hasCertificate; // 자격증 소지 여부
+    private String certificate; // 자격증 소지 여부
     private String licenseNumber; // 자격 번호
     private String licenseImageUrl; // 자격증 사진
     private Integer hospitalId; // 병원 ID
@@ -29,7 +29,7 @@ public class VetRequestDto {
         vet.setPassword(this.password);
         vet.setPhone(this.phone);
         vet.setName(this.name);
-        vet.setHasCertificate(this.hasCertificate);
+        vet.setCertificate(this.certificate);
         vet.setLicenseNumber(this.licenseNumber);
         vet.setLicenseImageUrl(this.licenseImageUrl);
         vet.setHospitalId(this.hospitalId);
