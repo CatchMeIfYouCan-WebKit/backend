@@ -10,6 +10,8 @@ public class MissingResponse {
 
     public String postType;
 
+    public Integer commentCount;
+
     public Integer userId;
 
     public String userNickname;

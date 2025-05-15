@@ -1,5 +1,6 @@
 package com.team.webkit.backend.api.missing.service;
 
+import com.team.webkit.backend.api.comment.repository.CommentRepository;
 import com.team.webkit.backend.api.member.repository.MemberRepository;
 import com.team.webkit.backend.api.missing.dto.WitnessRequest;
 import com.team.webkit.backend.api.missing.dto.WitnessResponse;
@@ -22,6 +23,7 @@ public class WitnessService {
     private final MissingRepository missingRepository;
     private final MemberRepository memberRepository;
     private final PetRepository petRepository;
+    private final CommentRepository commentRepository;
 
     // 목격 등록
     public WitnessResponse createWitness(WitnessRequest req) {
@@ -58,8 +60,13 @@ public class WitnessService {
     // 목격 전체조회
     public List<WitnessResponse> getAll() {
         List<Missing> posts = missingRepository.findByPostType(PostType.witness);
+
         return posts.stream()
-            .map(WitnessResponse::from)
+            .map(post -> {
+                WitnessResponse res = WitnessResponse.from(post);
+                res.commentCount = commentRepository.countByPost_Id(post.getId());
+                return res;
+            })
             .collect(Collectors.toList());
     }
 

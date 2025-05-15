@@ -1,5 +1,6 @@
 package com.team.webkit.backend.api.missing.service;
 
+import com.team.webkit.backend.api.comment.repository.CommentRepository;
 import com.team.webkit.backend.api.member.repository.MemberRepository;
 import com.team.webkit.backend.api.missing.dto.MissingRequest;
 import com.team.webkit.backend.api.missing.dto.MissingResponse;
@@ -23,6 +24,7 @@ public class MissingService {
     private final MissingRepository missingRepository;
     private final MemberRepository memberRepository;
     private final PetRepository petRepository;
+    private final CommentRepository commentRepository;
 
     // 실종 등록
     public MissingResponse createMissing(MissingRequest req) {
@@ -64,8 +66,13 @@ public class MissingService {
     // 실종 전체조회
     public List<MissingResponse> getAllMissingPosts() {
         List<Missing> posts = missingRepository.findByPostType(PostType.missing);
+
         return posts.stream()
-            .map(MissingResponse::from)
+            .map(post -> {
+                MissingResponse res = MissingResponse.from(post);
+                res.commentCount = commentRepository.countByPost_Id(post.getId());
+                return res;
+            })
             .collect(Collectors.toList());
     }
 

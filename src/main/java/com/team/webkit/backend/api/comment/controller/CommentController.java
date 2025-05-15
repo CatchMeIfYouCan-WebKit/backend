@@ -6,6 +6,7 @@ import com.team.webkit.backend.api.comment.service.CommentService;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,14 +25,28 @@ public class CommentController {
 
     // 댓글 등록
     @PostMapping
-    public ResponseEntity<CommentResponse> create(@RequestBody CommentRequest request) {
-        return ResponseEntity.ok(commentService.create(request));
+    public ResponseEntity<?> create(@RequestBody CommentRequest request) {
+        try {
+            CommentResponse response = commentService.create(request);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", e.getMessage()
+            ));
+        }
     }
 
     // 특정 게시글의 댓글 목록 조회
     @GetMapping("/post/{postId}")
-    public ResponseEntity<List<CommentResponse>> getComments(@PathVariable Long postId) {
-        return ResponseEntity.ok(commentService.getComments(postId));
+    public ResponseEntity<?> getComments(@PathVariable Long postId) {
+        try {
+            List<CommentResponse> comments = commentService.getComments(postId);
+            return ResponseEntity.ok(comments);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "error", e.getMessage()
+            ));
+        }
     }
 
     // 댓글 삭제

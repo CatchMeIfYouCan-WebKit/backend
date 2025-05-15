@@ -18,6 +18,8 @@ public class CommentResponse {
 
     private Integer userId;
 
+    private String nickname;
+
     private Long postId;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -33,6 +35,7 @@ public class CommentResponse {
         dto.setContent(comment.getContent());
         dto.setParentCommentId(comment.getParent() != null ? comment.getParent().getId() : null);
         dto.setUserId(comment.getMember().getId());
+        dto.setNickname(comment.getMember().getNickname());
         dto.setPostId(comment.getPost().getId());
         dto.setCreatedAt(comment.getCreatedAt());
         dto.setUpdatedAt(comment.getUpdatedAt());

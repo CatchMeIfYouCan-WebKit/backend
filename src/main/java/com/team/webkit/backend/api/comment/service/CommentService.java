@@ -30,10 +30,15 @@ public class CommentService {
             req.getContent());
 
         Comment comment = new Comment();
-
+        comment.setPost(
+            missingRepository.findById(req.getPostId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."))
+        );
+        comment.setMember(
+            memberRepository.findById(req.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."))
+        );
         comment.setContent(req.getContent());
-        comment.setPost(missingRepository.findById(req.getPostId()).orElseThrow());
-        comment.setMember(memberRepository.findById(req.getUserId()).orElseThrow());
 
         if (req.getParentCommentId() != null) {
             Comment parent = commentRepository.findById(req.getParentCommentId())
@@ -56,8 +61,13 @@ public class CommentService {
     public List<CommentResponse> getComments(Long postId) {
         log.info("게시글 ID {}의 댓글 목록 조회 요청", postId);
 
+        if (!missingRepository.existsById(postId)) {
+            throw new IllegalArgumentException("존재하지 않는 게시글입니다.");
+        }
+
         return commentRepository.findByPostIdOrderByCreatedAtAsc(postId)
-            .stream().map(CommentResponse::from)
+            .stream()
+            .map(CommentResponse::from)
             .collect(Collectors.toList());
     }
 
