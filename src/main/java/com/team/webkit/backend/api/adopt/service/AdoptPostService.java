@@ -31,7 +31,7 @@ public class AdoptPostService {
 
 
     @Transactional
-    public AdoptPostResponse create(AdoptPostRequest request, List<MultipartFile> files) {
+    public AdoptPostResponse create(AdoptPostRequest request) {
         Member member = memberRepository.findById(request.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("회원 없음"));
 
@@ -42,14 +42,14 @@ public class AdoptPostService {
         post.setComments(request.getComments());
         post.setAdoptLocation(request.getAdoptLocation());
 
-        // ✅ 1. petId가 있을 경우, 관계만 연결 (데이터는 request 기준으로)
+        // ✅ 등록된 petId가 있다면 관계만 연결
         if (request.getPetId() != null) {
             Pet pet = petRepository.findById(request.getPetId())
                     .orElseThrow(() -> new IllegalArgumentException("반려동물 없음"));
-            post.setPet(pet); // 관계만 설정
+            post.setPet(pet);
         }
 
-        // ✅ 2. request 기준으로 모든 값 저장
+        // ✅ 직접입력 정보 설정
         post.setName(request.getName());
         post.setBreed(request.getBreed());
         post.setCoatColor(request.getCoatColor());
@@ -57,7 +57,6 @@ public class AdoptPostService {
         post.setIsNeutered(request.getIsNeutered());
         post.setDateOfBirth(request.getDateOfBirth());
 
-        // 🎯 나이 계산
         if (request.getDateOfBirth() != null) {
             int currentYear = java.time.LocalDate.now().getYear();
             int birthYear = request.getDateOfBirth().getYear();
@@ -70,31 +69,15 @@ public class AdoptPostService {
         post.setLongitude(request.getLongitude());
         post.setStatus(AdoptPost.Status.valueOf(request.getStatus()));
 
-        // ✅ 3. 이미지 처리
-        List<String> allImagePaths = new ArrayList<>();
-
-        // photoPath가 문자열로 넘어온 경우
+        // ✅ 이미지 경로만 설정 (이미 upload API로 업로드 완료된 경로라고 가정)
         if (request.getPhotoPath() != null && !request.getPhotoPath().isBlank()) {
-            allImagePaths.addAll(Arrays.asList(request.getPhotoPath().split(",")));
+            post.setPhotoPath(request.getPhotoPath());
         }
 
-        // 업로드된 이미지 파일 저장
-        if (files != null) {
-            for (MultipartFile file : files) {
-                if (!file.isEmpty()) {
-                    String savedPath = fileService.saveAdoptImage(file);
-                    allImagePaths.add(savedPath);
-                }
-            }
-        }
-
-        // 저장
-        if (!allImagePaths.isEmpty()) {
-            post.setPhotoPath(String.join(",", allImagePaths));
-        }
-
-        return AdoptPostResponse.from(adoptPostRepository.save(post));
+        AdoptPost saved = adoptPostRepository.save(post);
+        return AdoptPostResponse.from(saved);
     }
+
 
 
 
@@ -121,31 +104,26 @@ public class AdoptPostService {
 
     // ✅ 3. 수정 (PUT)
     @Transactional
-    public AdoptPostResponse update(Long id, AdoptPostRequest request, List<MultipartFile> files, List<String> keepImages) {
+    public AdoptPostResponse update(Long id, AdoptPostRequest request, List<String> keepImages) {
         AdoptPost post = adoptPostRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("게시글 없음"));
 
         List<String> imagePaths = new ArrayList<>();
 
-        // ✅ 기존 이미지 유지 목록 추가
+        // ✅ 유지할 이미지 경로 반영
         if (keepImages != null && !keepImages.isEmpty()) {
             imagePaths.addAll(keepImages);
         }
 
-        // ✅ 새로 업로드된 파일 처리
-        if (files != null && !files.isEmpty()) {
-            for (MultipartFile file : files) {
-                if (!file.isEmpty()) {
-                    String savedPath = fileService.saveAdoptImage(file);
-                    imagePaths.add(savedPath);
-                }
-            }
+        // ✅ adoptPostRequest.photoPath에도 새 이미지 경로가 있다면 추가
+        if (request.getPhotoPath() != null && !request.getPhotoPath().isBlank()) {
+            imagePaths.addAll(Arrays.asList(request.getPhotoPath().split(",")));
         }
 
-        // ✅ 이미지 경로 최종 반영
+        // ✅ 최종 이미지 경로 저장
         post.setPhotoPath(String.join(",", imagePaths));
 
-        // ✅ 나머지 필드 업데이트
+        // ✅ 나머지 필드들 업데이트
         if (request.getPetId() != null) {
             Pet pet = petRepository.findById(request.getPetId())
                     .orElseThrow(() -> new IllegalArgumentException("펫 없음"));
@@ -177,6 +155,7 @@ public class AdoptPostService {
 
         return AdoptPostResponse.from(post);
     }
+
 
 
 
