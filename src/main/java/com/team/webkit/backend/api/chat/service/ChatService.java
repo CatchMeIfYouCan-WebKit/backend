@@ -1,18 +1,20 @@
 package com.team.webkit.backend.api.chat.service;
 
-import com.team.webkit.backend.api.chat.dto.ChatMessageDto;
+import com.team.webkit.backend.api.chat.dto.*;
 import com.team.webkit.backend.api.chat.entity.ChatMessage;
 import com.team.webkit.backend.api.chat.entity.ChatRoom;
-import com.team.webkit.backend.api.chat.entity.ChatRoom.ChatType;
 import com.team.webkit.backend.api.chat.repository.ChatMessageRepository;
 import com.team.webkit.backend.api.chat.repository.ChatRoomRepository;
+import com.team.webkit.backend.api.adopt.entity.AdoptPost;
+import com.team.webkit.backend.api.adopt.repository.AdoptPostRepository;
 import com.team.webkit.backend.api.member.entity.Member;
 import com.team.webkit.backend.api.member.repository.MemberRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -21,61 +23,79 @@ public class ChatService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final MemberRepository memberRepository;
+    private final AdoptPostRepository adoptPostRepository;
 
+    // ✅ 1. 채팅방 조회 or 생성
     @Transactional
-    public ChatRoom findOrCreateRoom(ChatMessageDto dto) {
-        Integer rawUser1Id = Integer.valueOf(dto.getSenderId());
-        Integer rawUser2Id = Integer.valueOf(dto.getReceiverId());
-        Long relatedId = Long.valueOf(dto.getRelatedId());
-        ChatType type = ChatType.valueOf(dto.getType().toUpperCase());
+    public ChatRoomResponse getOrCreateRoom(ChatRoomRequest request) {
+        Member sender = memberRepository.findById(request.getSenderId())
+                .orElseThrow(() -> new IllegalArgumentException("보낸 회원 없음"));
+        Member receiver = memberRepository.findById(request.getReceiverId())
+                .orElseThrow(() -> new IllegalArgumentException("받는 회원 없음"));
+        AdoptPost adoptPost = adoptPostRepository.findById(request.getAdoptPostId())
+                .orElseThrow(() -> new IllegalArgumentException("입양 게시글 없음"));
 
-        // 항상 낮은 ID가 user1이 되도록 정렬
-        Integer user1Id = rawUser1Id;
-        Integer user2Id = rawUser2Id;
-        if (user1Id > user2Id) {
-            Integer temp = user1Id;
-            user1Id = user2Id;
-            user2Id = temp;
-        }
+        // ✅ 여기에서 두 방향 모두 확인 (역방향 메서드 사용되는 부분!)
+        ChatRoom room = chatRoomRepository
+                .findBySenderAndReceiverAndAdoptPost(sender, receiver, adoptPost)
+                .or(() -> chatRoomRepository.findBySenderAndReceiverAndAdoptPost(receiver, sender, adoptPost))
+                .orElseGet(() -> chatRoomRepository.save(ChatRoom.builder()
+                        .sender(sender)
+                        .receiver(receiver)
+                        .adoptPost(adoptPost)
+                        .build()));
 
-        final Integer finalUser1Id = user1Id;
-        final Integer finalUser2Id = user2Id;
-
-        return chatRoomRepository.findByUser1IdAndUser2IdAndTypeAndRelatedId(
-                finalUser1Id.longValue(), finalUser2Id.longValue(), type, relatedId
-        ).orElseGet(() -> {
-            Member user1 = memberRepository.findById(finalUser1Id).orElseThrow(() -> new IllegalArgumentException("user1 없음"));
-            Member user2 = memberRepository.findById(finalUser2Id).orElseThrow(() -> new IllegalArgumentException("user2 없음"));
-
-            ChatRoom newRoom = ChatRoom.builder()
-                    .user1(user1)
-                    .user2(user2)
-                    .type(type)
-                    .relatedId(relatedId)
-                    .build();
-            return chatRoomRepository.save(newRoom);
-        });
+        return ChatRoomResponse.builder()
+                .roomId(room.getId())
+                .senderId(sender.getId())
+                .receiverId(receiver.getId())
+                .adoptPostId(adoptPost.getId())
+                .build();
     }
 
-    @Transactional
-    public ChatMessage saveMessage(ChatRoom room, ChatMessageDto dto) {
-        Integer senderId = Integer.valueOf(dto.getSenderId());
-        Member sender = memberRepository.findById(senderId).orElseThrow(() -> new IllegalArgumentException("보낸 유저 없음"));
 
-        return chatMessageRepository.save(ChatMessage.builder()
+
+    // ✅ 2. 메시지 저장
+    @Transactional
+    public ChatMessageResponse saveMessage(ChatMessageRequest request) {
+        ChatRoom room = chatRoomRepository.findById(request.getRoomId())
+                .orElseThrow(() -> new IllegalArgumentException("채팅방 없음"));
+
+        Member sender = memberRepository.findById(request.getSenderId())
+                .orElseThrow(() -> new IllegalArgumentException("보낸 회원 없음"));
+
+        ChatMessage message = chatMessageRepository.save(ChatMessage.builder()
                 .room(room)
                 .sender(sender)
-                .message(dto.getContent())
+                .message(request.getMessage())
                 .build());
+
+        return ChatMessageResponse.builder()
+                .roomId(room.getId())
+                .senderId(sender.getId())
+                .senderNickname(sender.getNickname())
+                .message(message.getMessage())
+                .sentAt(message.getSentAt())
+                .build();
     }
 
-    public List<ChatMessage> getMessagesByRoom(ChatRoom room) {
-        return chatMessageRepository.findByRoomOrderBySentAtAsc(room);
-    }
-    public String getSenderNickname(Integer senderId) {
-        return memberRepository.findById(senderId)
-                .orElseThrow(() -> new IllegalArgumentException("유저 없음"))
-                .getNickname(); // Member 엔티티에 nickname 필드가 있다고 가정
-    }
+    // ✅ 3. 채팅방 내 메시지 목록 조회
+    @Transactional(readOnly = true)
+    public List<ChatMessageResponse> getMessagesByRoom(Long roomId) {
+        ChatRoom room = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방 없음"));
 
+        List<ChatMessage> messages = chatMessageRepository.findByRoomOrderBySentAtAsc(room);
+
+        return messages.stream().map(msg ->
+                ChatMessageResponse.builder()
+                        .roomId(room.getId())
+                        .senderId(msg.getSender().getId())
+                        .senderNickname(msg.getSender().getNickname())
+                        .message(msg.getMessage())
+                        .sentAt(msg.getSentAt())
+                        .build()
+        ).collect(Collectors.toList());
+    }
 }
+
