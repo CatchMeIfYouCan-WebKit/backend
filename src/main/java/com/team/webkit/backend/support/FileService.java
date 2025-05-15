@@ -1,5 +1,6 @@
 package com.team.webkit.backend.support;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -101,6 +102,34 @@ public class FileService {
             throw new RuntimeException("파일 저장 실패: " + e.getMessage(), e);
         }
     }
+    //예찬 입양 이미지 업로드
+    public String save(MultipartFile file, String subFolder) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("빈 파일입니다.");
+        }
+
+        try {
+            // 저장 경로 설정 (상대경로 → 절대경로 변환)
+            String uploadDir = Paths.get(System.getProperty("user.dir"), "uploads", subFolder).toString();
+            File dir = new File(uploadDir);
+            if (!dir.exists()) dir.mkdirs();
+
+            // 파일명 UUID로 생성
+            String originalName = Optional.ofNullable(file.getOriginalFilename()).orElse("file.jpg");
+            String ext = originalName.contains(".") ? originalName.substring(originalName.lastIndexOf(".")) : ".jpg";
+            String filename = UUID.randomUUID() + ext;
+
+            File destination = new File(dir, filename);
+            file.transferTo(destination);
+
+            // 반환 경로는 프론트용 URL 경로
+            return "/uploads/" + subFolder + "/" + filename;
+
+        } catch (IOException e) {
+            throw new RuntimeException("파일 저장 실패", e);
+        }
+    }
+
 
 
 }
