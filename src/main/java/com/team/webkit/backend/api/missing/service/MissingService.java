@@ -4,12 +4,14 @@ import com.team.webkit.backend.api.member.repository.MemberRepository;
 import com.team.webkit.backend.api.missing.dto.MissingRequest;
 import com.team.webkit.backend.api.missing.dto.MissingResponse;
 import com.team.webkit.backend.api.missing.entity.Missing;
+import com.team.webkit.backend.api.missing.entity.Missing.PostType;
 import com.team.webkit.backend.api.missing.repository.MissingRepository;
 import com.team.webkit.backend.api.pet.repository.PetRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +24,7 @@ public class MissingService {
     private final MemberRepository memberRepository;
     private final PetRepository petRepository;
 
-    // 실종 게시글 등록
+    // 실종 등록
     public MissingResponse createMissing(MissingRequest req) {
         log.info("실종 게시글 등록 요청: {}", req);
 
@@ -59,31 +61,44 @@ public class MissingService {
     }
 
 
-    // 실종 게시글 상세조회
+    // 실종 전체조회
+    public List<MissingResponse> getAllMissingPosts() {
+        List<Missing> posts = missingRepository.findByPostType(PostType.missing);
+        return posts.stream()
+            .map(MissingResponse::from)
+            .collect(Collectors.toList());
+    }
+
+
+    // 실종 상세조회
     public MissingResponse getMissingPostById(Long id) {
         log.info("실종 게시글 상세 조회 요청: 게시글 ID={}", id);
 
         return missingRepository.findById(id)
             .map(post -> {
                 MissingResponse response = MissingResponse.from(post);
+
+                Integer petId = response.petId != null ? response.petId : -1;
+                String petBreed = response.petBreed != null ? response.petBreed : "정보 없음";
+                String petCoatColor =
+                    response.petCoatColor != null ? response.petCoatColor : "정보 없음";
+
                 log.info(
-                    "게시글 조회 성공: [ID: {}], [작성자 ID: {}], [PostType: {}], [UserID: {}], [PetID: {}], [PhotoURL: {}], "
+                    "게시글 조회 성공: [ID: {}], [작성자 ID: {}], [PostType: {}], [PetID: {}], [PhotoURL: {}], "
                         +
-                        "[MissingDatetime: {}], [MissingLocation: {}], [DetailDescription: {}], [Address: {}], "
-                        +
+                        "[MissingDatetime: {}], [MissingLocation: {}], [DetailDescription: {}] " +
                         "[Breed: {}], [CoatColor: {}], [CreatedAt: {}], [UpdatedAt: {}], [UserNickname: {}], [UserPhone: {}]",
+
                     response.id,
                     response.userId,
                     response.postType,
-                    response.userId,
-                    response.petId,
+                    petId,
                     response.photoUrl,
                     response.missingDatetime,
                     response.missingLocation,
                     response.detailDescription,
-                    response.address,
-                    response.breed,
-                    response.coatColor,
+                    petBreed,
+                    petCoatColor,
                     response.createdAt,
                     response.updatedAt,
                     response.userNickname,
@@ -97,52 +112,40 @@ public class MissingService {
             });
     }
 
-//    // 실종 게시글 수정
-//    public MissingResponse updateMissing(Long id, MissingRequest req) {
-//        log.info("게시글 수정 요청 (ID: {}, 데이터: {})", id, req);
-//
-//        Integer currentUserId = (Integer) SecurityContextHolder.getContext().getAuthentication()
-//            .getPrincipal();
-//
-//        Missing post = missingRepository.findById(id)
-//            .orElseThrow(() -> {
-//                log.error("게시글 없음 - ID: {}", id);
-//                return new RuntimeException("해당 게시글을 찾을 수 없습니다.");
-//            });
-//
-//        if (!post.getMember().getId().equals(currentUserId)) {
-//            log.warn("수정 권한 없음 - 요청자 ID: {}, 게시글 작성자 ID: {}", currentUserId,
-//                post.getMember().getId());
-//            throw new RuntimeException("게시글 작성자만 수정할 수 있습니다.");
-//        }
-//
-//        if (req.photoUrl == null || req.photoUrl.isBlank()) {
-//            req.photoUrl = post.getPhotoUrl();
-//        }
-//
-//        try {
-//            post.setPostType(Missing.PostType.valueOf(req.postType));
-//        } catch (IllegalArgumentException e) {
-//            log.error("유효하지 않은 postType 값: {}", req.postType);
-//            throw new RuntimeException("postType 값이 잘못되었습니다.");
-//        }
-//
-//        post.setPhotoUrl(req.photoUrl);
-//        post.setMissingDatetime(req.missingDatetime);
-//        post.setMissingLocation(req.missingLocation);
-//        post.setDetailDescription(req.detailDescription);
-//
-//        Missing updated = missingRepository.save(post);
-//        log.info("게시글 수정 완료 (ID: {})", updated.getId());
-//
-//        return MissingResponse.from(updated);
-//    }
 
+    // 실종 삭제
+    public void deleteMissingPost(Long id) {
+        Missing post = missingRepository.findById(id)
+            .orElseThrow(() -> {
+                log.error("삭제 실패: 존재하지 않는 게시글 ID={}", id);
+                return new RuntimeException("게시글을 찾을 수 없습니다.");
+            });
 
-    //실종 불러오기 데이터 비즈니스 로직 추가(예찬)
-    public List<MissingResponse> getAllMissingPosts() {
-        return missingRepository.findByPostType(Missing.PostType.missing)
-            .stream()
+        if (post.getPet() == null) {
+            log.warn("삭제 실패: petId가 없어 삭제할 수 없음. 게시글 ID={}", id);
+            throw new RuntimeException("petId가 없어 삭제할 수 없습니다.");
+        }
+
+        missingRepository.delete(post);
+        log.info("게시글 삭제 성공: 게시글 ID={}", id);
+    }
+
+    // 실종 필터링(품종, 털색)
+    public List<MissingResponse> findMissingPostsByFilter(String breed, String coatColor) {
+        List<Missing> posts;
+
+        if (breed != null && coatColor != null) {
+            posts = missingRepository.findByPetBreedAndPetCoatColor(breed, coatColor);
+        } else if (breed != null) {
+            posts = missingRepository.findByPetBreed(breed);
+        } else if (coatColor != null) {
+            posts = missingRepository.findByPetCoatColor(coatColor);
+        } else {
+            posts = missingRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+        }
+
+        log.info("필터링된 게시글 개수: {}", posts.size());
+        return posts.stream()
             .map(MissingResponse::from)
             .collect(Collectors.toList());
     }

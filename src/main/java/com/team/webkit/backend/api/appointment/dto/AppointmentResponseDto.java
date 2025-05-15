@@ -14,8 +14,10 @@ public class AppointmentResponseDto {
 
     private Long id;
     private Integer userId;
+    private String userNickname;
     private Integer vetId;
     private Integer petId;
+    private String petName;
     private LocalDateTime appointmentTime;
     private Boolean isInPerson;
     private String purpose;
@@ -25,9 +27,11 @@ public class AppointmentResponseDto {
     public static AppointmentResponseDto fromEntity(Appointment appointment) {
         return new AppointmentResponseDto(
             appointment.getId(),
-            appointment.getUserId(),
+            appointment.getUser() != null ? appointment.getUser().getId() : null,
+            appointment.getUser() != null ? appointment.getUser().getNickname() : null,
             appointment.getVetId(),
-            appointment.getPetId(),
+            appointment.getPet() != null ? appointment.getPet().getId() : null,
+            appointment.getPet() != null ? appointment.getPet().getName() : null,
             appointment.getAppointmentTime(),
             appointment.getIsInPerson(),
             appointment.getPurpose(),
@@ -35,4 +39,6 @@ public class AppointmentResponseDto {
             appointment.getVetOpinion()
         );
     }
+
+
 }

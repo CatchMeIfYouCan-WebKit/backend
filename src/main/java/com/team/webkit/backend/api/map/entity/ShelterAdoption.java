@@ -1,22 +1,30 @@
 package com.team.webkit.backend.api.map.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
-@Table(name = "shelter_adoption_animals")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ShelterAdoptionAnimal {
+@Table(name = "shelter_adoption_animals")
+public class ShelterAdoption {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @Column(name = "announcement_no", nullable = false, unique = true)
     private String announcementNo;
@@ -77,6 +85,12 @@ public class ShelterAdoptionAnimal {
 
     @Column(name = "protection_location")
     private String protectionLocation;
+
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
 
     @Column(name = "adoption_procedure", columnDefinition = "TEXT")
     private String adoptionProcedure;

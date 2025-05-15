@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,7 +33,7 @@ public class WitnessController {
     private final WitnessService witnessService;
     private final FileService fileService;
 
-    // 목격 게시글 등록
+    // 목격 등록
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<WitnessResponse> createWitness(
         @RequestPart("post") String witnessJson,
@@ -65,34 +66,29 @@ public class WitnessController {
         return ResponseEntity.ok(Map.of("photoPath", photoPath));
     }
 
-    // 목격 게시글 상세조회
+    // 목격 전체조회
+    @GetMapping("/all")
+    public ResponseEntity<List<WitnessResponse>> getAll() {
+        return ResponseEntity.ok(witnessService.getAll());
+    }
+
+
+    // 목격 상세조회
     @GetMapping("/{id}")
     public ResponseEntity<WitnessResponse> getWitnessPost(@PathVariable Long id) {
-        return ResponseEntity.ok(witnessService.getWitnessPostById(id));
+        return ResponseEntity.ok(witnessService.get(id));
     }
 
-//    @PostMapping(value = "/{id}/witness", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    public ResponseEntity<WitnessResponse> updateWitness(
-//        @PathVariable Long id,
-//        @RequestPart("post") String witnessJson,
-//        @RequestPart(value = "file", required = false) MultipartFile file
-//    ) throws JsonProcessingException {
-//
-//        ObjectMapper mapper = new ObjectMapper();
-//        mapper.registerModule(new JavaTimeModule());
-//        WitnessRequest request = mapper.readValue(witnessJson, WitnessRequest.class);
-//
-//        if (file != null && !file.isEmpty()) {
-//            request.photoUrls = fileService.save(file);
-//        }
-//
-//        return ResponseEntity.ok(witnessService.updateWitness(id, request));
-//    }
 
-
-    // 지도 불러오기 목격 응답 API 추가 (예찬)
-    @GetMapping("/witness-posts")
-    public ResponseEntity<List<WitnessResponse>> getWitnessPosts() {
-        return ResponseEntity.ok(witnessService.getAllWitnessPosts());
+    // 목격 삭제
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        try {
+            witnessService.delete(id);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
+
 }

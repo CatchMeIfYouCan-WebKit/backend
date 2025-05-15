@@ -1,12 +1,17 @@
 package com.team.webkit.backend.api.appointment.entity;
 
+import com.team.webkit.backend.api.member.entity.Member;
+import com.team.webkit.backend.api.pet.entity.Pet;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
@@ -14,7 +19,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "appointments")
+@Table(name = "vet_appointments")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,14 +29,16 @@ public class Appointment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id")
-    private Integer userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private Member user;
 
     @Column(name = "vet_id")
     private Integer vetId;
 
-    @Column(name = "pet_id")
-    private Integer petId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pet_id", insertable = false, updatable = false)
+    private Pet pet;
 
     @Column(name = "visit_count")
     private Integer visitCount = 0;

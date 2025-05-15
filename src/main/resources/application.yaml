@@ -17,3 +17,5 @@ spring:
 jwt:
   secret: NzJkNzNiNGNiN2E1YjYxM2FkMzFhNmNhNzE4M2ZhODRlNjdmODhiZTIzZjYyOTM5
   expiration_time: 86400 # 24시간
+kakao:
+  rest-api-key: 894dbd0439c3c14b350a3f0e6dcc07b4 # 토큰 만료 시 교체 필요

@@ -1,6 +1,5 @@
 package com.team.webkit.backend.api.appointment.controller;
 
-import com.team.webkit.backend.api.appointment.dto.AppointmentRequestDto;
 import com.team.webkit.backend.api.appointment.dto.AppointmentResponseDto;
 import com.team.webkit.backend.api.appointment.entity.Appointment;
 import com.team.webkit.backend.api.appointment.entity.Appointment.AppointmentStatus;
@@ -11,8 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,11 +22,11 @@ public class AppointmentController {
     private final AppointmentService appointmentService;
 
     // 예약 신청
-    @PostMapping
-    public ResponseEntity<AppointmentResponseDto> create(@RequestBody AppointmentRequestDto dto) {
-        Appointment appointment = appointmentService.create(dto);
-        return ResponseEntity.ok(AppointmentResponseDto.fromEntity(appointment));
-    }
+//    @PostMapping
+//    public ResponseEntity<AppointmentResponseDto> create(@RequestBody AppointmentRequestDto dto) {
+//        Appointment appointment = appointmentService.create(dto);
+//        return ResponseEntity.ok(AppointmentResponseDto.fromEntity(appointment));
+//    }
 
     // 사용자 기준 예약 조회
     @GetMapping("/user/{userId}")
@@ -43,11 +40,10 @@ public class AppointmentController {
     // 수의사 기준 예약 조회
     @GetMapping("/vet/{vetId}")
     public ResponseEntity<List<AppointmentResponseDto>> findByVetId(@PathVariable Integer vetId) {
-        List<AppointmentResponseDto> result = appointmentService.findByVetId(vetId).stream()
-            .map(AppointmentResponseDto::fromEntity)
-            .toList();
+        List<AppointmentResponseDto> result = appointmentService.findByVetId(vetId);
         return ResponseEntity.ok(result);
     }
+
 
     // 예약 상태 변경
     @PatchMapping("/{id}/status")

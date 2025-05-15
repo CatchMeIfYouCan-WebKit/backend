@@ -6,7 +6,9 @@ import com.team.webkit.backend.api.vet.dto.VetRequestDto;
 import com.team.webkit.backend.api.vet.dto.VetResponseDto;
 import com.team.webkit.backend.api.vet.entity.Vet;
 import com.team.webkit.backend.api.vet.service.VetService;
+import com.team.webkit.backend.config.JwtUtil;
 import com.team.webkit.backend.support.FileService;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -31,6 +33,7 @@ public class VetController {
 
     private final VetService vetService;
     private final FileService fileService;
+    private final JwtUtil jwtUtil;
 
     // 회원가입
     @PostMapping(
@@ -79,15 +82,33 @@ public class VetController {
 
     // 로그인
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody VetRequestDto dto) {
-        Optional<Vet> vet = vetService.login(dto.getLoginId(), dto.getPassword());
+    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> request) {
+        String loginId = request.get("loginId");
+        String password = request.get("password");
 
-        if (vet.isPresent()) {
-            return ResponseEntity.ok(Map.of("message", "로그인 성공"));
+        Map<String, String> body = new LinkedHashMap<>();
+
+        if (loginId == null || loginId.isEmpty() || password == null || password.isEmpty()) {
+            body.put("rsltMsg", "필수값 누락");
         } else {
-            return ResponseEntity.status(401).body(Map.of("message", "아이디 또는 비밀번호가 올바르지 않습니다."));
+            Optional<Vet> optionalVet = vetService.login(loginId, password);
+
+            if (optionalVet.isPresent()) {
+                Vet vet = optionalVet.get();
+                String token = jwtUtil.createAccessToken(vet);
+
+                body.put("rsltMsg", "로그인 성공");
+                body.put("accessToken", token);
+                body.put("vetId", vet.getId().toString()); // ✅ vetId도 반환
+            } else {
+                body.put("rsltMsg", "아이디 혹은 비밀번호가 맞지 않습니다.");
+            }
         }
+
+        return ResponseEntity.ok(body);
+
     }
+
 
     // 모든 수의사 조회
     @GetMapping

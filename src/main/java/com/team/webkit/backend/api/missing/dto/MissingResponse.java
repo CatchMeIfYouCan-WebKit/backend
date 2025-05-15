@@ -18,6 +18,12 @@ public class MissingResponse {
 
     public Integer petId;
 
+    public String petName;
+
+    public String petBreed;
+
+    public String petCoatColor;
+
     public String photoUrl;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
@@ -27,11 +33,6 @@ public class MissingResponse {
 
     public String detailDescription;
 
-    // 추가한 필드(예찬)
-    public String address;
-    public String breed;
-    public String coatColor;
-
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     public LocalDateTime createdAt;
 
@@ -40,24 +41,27 @@ public class MissingResponse {
 
 
     public static MissingResponse from(Missing post) {
+        if (post.getPet() == null) {
+            throw new IllegalStateException("해당 게시글은 반려동물 정보가 없습니다.");
+        }
+
         MissingResponse res = new MissingResponse();
 
         res.id = post.getId();
-        res.postType = post.getPostType().name();
+        res.postType = "missing";
         res.userId = post.getMember().getId();
         res.userNickname = post.getMember().getNickname();
         res.userPhone = post.getMember().getPhone();
         res.petId = post.getPet().getId();
+        res.petName = post.getPet().getName();
+        res.petBreed = post.getPet().getBreed();
+        res.petCoatColor = post.getPet().getCoatColor();
         res.photoUrl = post.getPhotoUrl();
         res.missingDatetime = post.getMissingDatetime();
         res.missingLocation = post.getMissingLocation();
         res.detailDescription = post.getDetailDescription();
         res.createdAt = post.getCreatedAt();
         res.updatedAt = post.getUpdatedAt();
-        //추가 필드 입니다(예찬)
-        res.address = post.getMissingLocation(); // 주소로 사용
-        res.breed = post.getPet().getBreed();
-        res.coatColor = post.getPet().getCoatColor();
 
         return res;
     }
