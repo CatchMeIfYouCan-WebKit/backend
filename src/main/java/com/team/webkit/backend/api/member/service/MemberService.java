@@ -160,4 +160,10 @@ public class MemberService {
     }
 
 
+    // id로 회원찾기
+    public Member findById(Integer id) {
+        return memberRepository.findById(id).orElse(null);
+    }
+
+
 }

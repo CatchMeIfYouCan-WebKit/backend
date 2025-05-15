@@ -305,32 +305,27 @@ public class MemberController {
 
     // 회원정보 조회
     @PostMapping("/info")
-    public ResponseEntity<MspResult> info(@RequestBody Map<String, String> request) {
-        String loginId = request.get("loginId");
+    public ResponseEntity<?> info(@RequestBody Map<String, String> request) {
+        String id = request.get("id");
 
         Map<String, String> body = new LinkedHashMap<>();
 
-        if (loginId.isEmpty()) {
-            body.put("rsltCode", "1001");
-            body.put("rsltMsg", "필수값 누락");
-        } else {
-            Member member = memberService.info(loginId);
-
-            if (member != null) {
-                body.put("rsltCode", "0000");
-                body.put("rsltMsg", "회원이 존재합니다.");
-                body.put("loginId", member.getLoginId());
-                body.put("nickname", member.getNickname());
-                body.put("phone", member.getPhone());
-            } else {
-                body.put("rsltCode", "2003");
-                body.put("rsltMsg", "회원이 존재하지 않습니다.");
-            }
+        if (id == null || id.isEmpty()) {
+            body.put("message", "필수값 누락");
+            return ResponseEntity.badRequest().body(body);
         }
 
-        MspResult result = MspUtil.makeResult(MspStatus.OK, body);
+        Member member = memberService.findById(Integer.parseInt(id));
 
-        return ResponseEntity.ok(result);
+        if (member != null) {
+            body.put("loginId", member.getLoginId());
+            body.put("nickname", member.getNickname());
+            body.put("phone", member.getPhone());
+        } else {
+            body.put("message", "회원이 존재하지 않습니다.");
+        }
+
+        return ResponseEntity.ok(body);
     }
 
 
