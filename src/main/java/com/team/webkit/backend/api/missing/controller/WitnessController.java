@@ -8,9 +8,12 @@ import com.team.webkit.backend.api.missing.dto.WitnessResponse;
 import com.team.webkit.backend.api.missing.service.WitnessService;
 import com.team.webkit.backend.support.FileService;
 import com.team.webkit.backend.support.annotation.MSP;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -22,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 @MSP
@@ -32,10 +36,12 @@ public class WitnessController {
 
     private final WitnessService witnessService;
     private final FileService fileService;
+    private final RestTemplate restTemplate = new RestTemplate();
+    private static final String AI_PREDICT_URL = "http://localhost:8081/ai/predict-from-path";
 
     // 목격 등록
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<WitnessResponse> createWitness(
+    public ResponseEntity<Map<String, Object>> createWitness(
         @RequestPart("post") String witnessJson,
         @RequestPart(value = "files", required = false) List<MultipartFile> files
     ) throws JsonProcessingException {
@@ -43,15 +49,41 @@ public class WitnessController {
         mapper.registerModule(new JavaTimeModule());
         WitnessRequest request = mapper.readValue(witnessJson, WitnessRequest.class);
 
+        String representativePhoto = null;
         if (files != null && !files.isEmpty()) {
             List<String> paths = files.stream()
                 .map(fileService::save)
                 .toList();
             request.setPhotoUrls(paths);
+            representativePhoto = paths.get(0); // 첫 번째 이미지 대표
         }
 
         WitnessResponse response = witnessService.createWitness(request);
-        return ResponseEntity.ok(response);
+
+        // AI 예측 호출: 대표 이미지가 있을 때만
+        if (representativePhoto != null) {
+            try {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                Map<String, Object> aiReq = new HashMap<>();
+                aiReq.put("photo_url", representativePhoto);
+                aiReq.put("pet_id", null);
+                aiReq.put("post_type", "witness");
+                aiReq.put("post_id", response.id);
+                HttpEntity<Map<String, Object>> entity = new HttpEntity<>(aiReq, headers);
+                restTemplate.postForEntity(AI_PREDICT_URL, entity, String.class);
+            } catch (Exception e) {
+                // 로깅 처리 (예측 실패해도 게시글 등록은 정상)
+                e.printStackTrace();
+            }
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("data", response);
+        result.put("postId", response.id);
+        result.put("photoUrl", representativePhoto);
+
+        return ResponseEntity.ok(result);
     }
 
     // 이미지 업로드
@@ -72,13 +104,11 @@ public class WitnessController {
         return ResponseEntity.ok(witnessService.getAll());
     }
 
-
     // 목격 상세조회
     @GetMapping("/{id}")
     public ResponseEntity<WitnessResponse> getWitnessPost(@PathVariable Long id) {
         return ResponseEntity.ok(witnessService.get(id));
     }
-
 
     // 목격 삭제
     @DeleteMapping("/{id}")
@@ -90,5 +120,4 @@ public class WitnessController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
 }

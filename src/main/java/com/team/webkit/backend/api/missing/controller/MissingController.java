@@ -8,7 +8,9 @@ import com.team.webkit.backend.api.missing.dto.MissingResponse;
 import com.team.webkit.backend.api.missing.service.MissingService;
 import com.team.webkit.backend.support.FileService;
 import com.team.webkit.backend.support.annotation.MSP;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,16 +30,14 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class MissingController {
 
-
     private final MissingService missingService;
     private final FileService fileService;
 
-
     // 실종 등록
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<MissingResponse> createMissing(@RequestPart("post") String missingJson,
-        @RequestPart(value = "file", required = false)
-        MultipartFile file) throws JsonProcessingException {
+    public ResponseEntity<Map<String, Object>> createMissing(
+        @RequestPart("post") String missingJson,
+        @RequestPart(value = "file", required = false) MultipartFile file) throws JsonProcessingException {
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
@@ -47,9 +47,15 @@ public class MissingController {
             request.photoUrl = fileService.save(file);
         }
 
-        return ResponseEntity.ok(missingService.createMissing(request));
-    }
+        MissingResponse response = missingService.createMissing(request);
 
+        // AI 예측을 위한 최소 응답 정보 반환
+        Map<String, Object> result = new HashMap<>();
+        result.put("postId", response.id);
+        result.put("photoUrl", response.photoUrl);
+
+        return ResponseEntity.ok(result);
+    }
 
     // 실종 전체조회
     @GetMapping("all")
@@ -58,13 +64,11 @@ public class MissingController {
         return ResponseEntity.ok(result);
     }
 
-
     // 실종 상세조회
     @GetMapping("/{id}")
     public ResponseEntity<MissingResponse> getMissingPost(@PathVariable Long id) {
         return ResponseEntity.ok(missingService.getMissingPostById(id));
     }
-
 
     // 실종 삭제
     @DeleteMapping("/{id}")
@@ -73,16 +77,12 @@ public class MissingController {
         return ResponseEntity.noContent().build();
     }
 
-
     // 실종 필터링(품종, 털색)
     @GetMapping
     public ResponseEntity<List<MissingResponse>> getMissingPostsByFilter(
         @RequestParam(required = false) String breed,
-        @RequestParam(required = false) String coatColor
-    ) {
+        @RequestParam(required = false) String coatColor) {
         List<MissingResponse> result = missingService.findMissingPostsByFilter(breed, coatColor);
         return ResponseEntity.ok(result);
     }
-
-
 }
