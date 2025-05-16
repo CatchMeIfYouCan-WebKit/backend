@@ -73,6 +73,8 @@ public class WitnessController {
                 HttpEntity<Map<String, Object>> entity = new HttpEntity<>(aiReq, headers);
                 restTemplate.postForEntity(AI_PREDICT_URL, entity, String.class);
             } catch (Exception e) {
+                // 로깅 처리 (예측 실패해도 게시글 등록은 정상)
+
             }
         }
 
