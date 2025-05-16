@@ -23,6 +23,7 @@ public class WebConfig implements WebMvcConfigurer {
             .allowedOrigins("*")
             .allowedMethods("GET")
             .allowedHeaders("*")
+            .allowedOrigins("http://localhost:5173")
             .exposedHeaders("Content-Type", "Content-Length");
 
     }

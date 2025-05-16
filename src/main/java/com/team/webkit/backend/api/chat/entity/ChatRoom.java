@@ -1,40 +1,50 @@
 package com.team.webkit.backend.api.chat.entity;
 
-import com.team.webkit.backend.api.adopt.entity.AdoptPost;
 import com.team.webkit.backend.api.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "chat_rooms",
-        uniqueConstraints = @UniqueConstraint(name = "unique_chat", columnNames = {"sender_id", "receiver_id", "adopt_post_id"}))
+    uniqueConstraints = @UniqueConstraint(columnNames = {"user1_id","user2_id","type","related_id"}))
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class ChatRoom {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 보내는 사람
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_id", nullable = false)
-    private Member sender;
+    @ManyToOne
+    @JoinColumn(name = "user1_id", nullable = false)
+    private Member user1;
 
-    // 받는 사람
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "receiver_id", nullable = false)
-    private Member receiver;
+    @ManyToOne
+    @JoinColumn(name = "user2_id", nullable = false)
+    private Member user2;
 
-    // 어떤 입양 게시글에서의 채팅인지
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "adopt_post_id", nullable = false)
-    private AdoptPost adoptPost;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Type type;
 
-    @Column(name = "created_at", columnDefinition = "DATETIME", updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "related_id", nullable = false)
+    private Long relatedId;
+
+    private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChatMessage> messages = new ArrayList<>();
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public enum Type { ADOPTION, VET }
 }
