@@ -3,24 +3,33 @@ package com.team.webkit.backend.api.chat.service;
 import com.team.webkit.backend.api.chat.dto.ChatMessageDto;
 import com.team.webkit.backend.api.chat.dto.ChatRoomDto;
 import com.team.webkit.backend.api.chat.dto.ChatRoomRequest;
+import com.team.webkit.backend.api.chat.dto.NotificationRequestDto;
 import com.team.webkit.backend.api.chat.entity.ChatMessage;
 import com.team.webkit.backend.api.chat.entity.ChatRoom;
 import com.team.webkit.backend.api.chat.repository.ChatMessageRepository;
 import com.team.webkit.backend.api.chat.repository.ChatRoomRepository;
 import com.team.webkit.backend.api.member.repository.MemberRepository;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ChatService {
+
     private final ChatRoomRepository roomRepo;
     private final ChatMessageRepository msgRepo;
     private final MemberRepository memberRepo;
+    @Autowired
+    private final SimpMessagingTemplate messagingTemplate;
 
     /** 내 채팅방 목록 조회 (lastMessage 포함) */
     @Transactional(readOnly = true)
@@ -90,7 +99,9 @@ public class ChatService {
             });
     }
 
-    /** 채팅방 삭제 */
+    /**
+     * 채팅방 삭제
+     */
     @Transactional
     public void deleteRoom(Long roomId) {
         var room = roomRepo.findById(roomId)
@@ -98,4 +109,21 @@ public class ChatService {
         msgRepo.deleteByRoom(room);
         roomRepo.delete(room);
     }
+
+    // 알림용
+    public void sendNotification(NotificationRequestDto req) {
+        log.info("📢 [Service] 알림 전송 시작: receiverId={}, message={}", req.getReceiverId(),
+            req.getMessage());
+
+        Map<String, String> payload = new HashMap<>();
+        payload.put("message", req.getMessage());
+        messagingTemplate.convertAndSend(
+            "/topic/notify/" + req.getReceiverId(),
+            payload
+        );
+        
+        log.info("📢 [Service] 알림 전송 완료: /topic/notify/{}", req.getReceiverId());
+    }
+
+
 }

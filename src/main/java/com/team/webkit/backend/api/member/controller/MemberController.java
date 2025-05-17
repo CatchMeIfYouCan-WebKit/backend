@@ -306,6 +306,8 @@ public class MemberController {
     // 회원정보 조회
     @PostMapping("/info")
     public ResponseEntity<?> info(@RequestBody Map<String, String> request) {
+        System.out.println("📩 요청 도착: " + request);
+
         String id = request.get("id");
 
         Map<String, String> body = new LinkedHashMap<>();
@@ -316,6 +318,7 @@ public class MemberController {
         }
 
         Member member = memberService.findById(Integer.parseInt(id));
+        System.out.println("👤 조회 결과: " + member);
 
         if (member != null) {
             body.put("loginId", member.getLoginId());
