@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -130,7 +131,11 @@ public class WitnessService {
 
         // ✅ 실종 게시글 가져오기 및 AI 예측값 매핑
         Map<Long, AiPrediction> predictionMap = aiPredictionRepository.findAllByPostIdIn(missingIds).stream()
-                .collect(Collectors.toMap(AiPrediction::getPostId, p -> p));
+            .collect(Collectors.toMap(
+                AiPrediction::getPostId,
+                Function.identity(),
+                (existing, duplicate) -> existing // 또는 duplicate로 교체 가능
+            ));
 
         List<Missing> sorted = missingRepository.findAllWithPetByIdIn(missingIds).stream()
                 .filter(p -> p.getPostType() == Missing.PostType.missing)
