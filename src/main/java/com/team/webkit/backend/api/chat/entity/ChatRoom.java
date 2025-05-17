@@ -36,9 +36,12 @@ public class ChatRoom {
     @Column(name = "related_id", nullable = false)
     private Long relatedId;
 
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+    // --- 여기를 추가: 메시지 목록 매핑 ---
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("sentAt ASC")
     private List<ChatMessage> messages = new ArrayList<>();
 
     @PrePersist
@@ -46,5 +49,7 @@ public class ChatRoom {
         this.createdAt = LocalDateTime.now();
     }
 
-    public enum Type { ADOPTION, VET }
+    public enum Type {
+        ADOPTION, VET
+    }
 }

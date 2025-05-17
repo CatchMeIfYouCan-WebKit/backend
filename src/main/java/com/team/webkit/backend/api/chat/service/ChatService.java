@@ -22,15 +22,17 @@ public class ChatService {
     private final ChatMessageRepository msgRepo;
     private final MemberRepository memberRepo;
 
+    /** 내 채팅방 목록 조회 (lastMessage 포함) */
     @Transactional(readOnly = true)
     public List<ChatRoomDto> listRooms(Long userId) {
-        var m = memberRepo.findById(userId.intValue())
+        var me = memberRepo.findById(userId.intValue())
             .orElseThrow(() -> new IllegalArgumentException("회원 없음: " + userId));
-        return roomRepo.findByUser1OrUser2(m, m).stream()
+        return roomRepo.findByUser1OrUser2(me, me).stream()
             .map(ChatRoomDto::from)
             .collect(Collectors.toList());
     }
 
+    /** 방의 메시지 리스트 조회 */
     @Transactional(readOnly = true)
     public List<ChatMessageDto> listMessages(Long roomId) {
         var room = roomRepo.findById(roomId)
@@ -40,6 +42,7 @@ public class ChatService {
             .collect(Collectors.toList());
     }
 
+    /** 메시지 저장 */
     @Transactional
     public ChatMessageDto postMessage(Long roomId, Long senderId, String message) {
         var room = roomRepo.findById(roomId)
@@ -54,8 +57,7 @@ public class ChatService {
         return ChatMessageDto.from(msgRepo.save(msg));
     }
 
-    // ───────────────────────────────────────────────────────────
-    // ★ 여기부터 추가된 오버로드 메서드
+    /** 방 생성 또는 조회(오버로드) */
     @Transactional
     public ChatRoomDto getOrCreateRoom(ChatRoomRequest req) {
         return getOrCreateRoom(
@@ -65,7 +67,6 @@ public class ChatService {
             req.getRelatedId()
         );
     }
-    // ───────────────────────────────────────────────────────────
 
     @Transactional
     public ChatRoomDto getOrCreateRoom(Long user1Id, Long user2Id, String type, Long relatedId) {
@@ -80,8 +81,10 @@ public class ChatService {
             .map(ChatRoomDto::from)
             .orElseGet(() -> {
                 var room = ChatRoom.builder()
-                    .user1(m1).user2(m2)
-                    .type(tp).relatedId(relatedId)
+                    .user1(m1)
+                    .user2(m2)
+                    .type(tp)
+                    .relatedId(relatedId)
                     .build();
                 return ChatRoomDto.from(roomRepo.save(room));
             });
@@ -90,12 +93,9 @@ public class ChatService {
     /** 채팅방 삭제 */
     @Transactional
     public void deleteRoom(Long roomId) {
-        // 1) 방을 조회해서
-        ChatRoom room = roomRepo.findById(roomId)
+        var room = roomRepo.findById(roomId)
             .orElseThrow(() -> new IllegalArgumentException("채팅방 없음: " + roomId));
-        // 2) 해당 방의 모든 메시지를 먼저 삭제
         msgRepo.deleteByRoom(room);
-        // 3) 그 다음 방을 삭제
         roomRepo.delete(room);
     }
 }

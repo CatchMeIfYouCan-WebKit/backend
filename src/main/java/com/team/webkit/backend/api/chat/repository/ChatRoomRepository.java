@@ -1,4 +1,3 @@
-// ChatRoomRepository.java
 package com.team.webkit.backend.api.chat.repository;
 
 import com.team.webkit.backend.api.chat.entity.ChatRoom;
