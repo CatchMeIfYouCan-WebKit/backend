@@ -28,6 +28,7 @@ public class AdoptPostController {
 
     private final AdoptPostService adoptPostService;
     private final FileService fileService;
+    private final AdoptPostService postService;
 
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
@@ -88,5 +89,16 @@ public class AdoptPostController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         adoptPostService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /** 🔥 status 만 변경하는 엔드포인트 */
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<AdoptPostResponse> updateStatus(
+        @PathVariable Long id,
+        @RequestBody Map<String, String> body  // { "status": "분양완료" }
+    ) {
+        String newStatus = body.get("status");
+        AdoptPostResponse updated = postService.updateStatus(id, newStatus);
+        return ResponseEntity.ok(updated);
     }
 }

@@ -167,5 +167,15 @@ public class AdoptPostService {
     public void delete(Long id) {
         adoptPostRepository.deleteById(id);
     }
+
+    @Transactional
+    public AdoptPostResponse updateStatus(Long id, String newStatus) {
+        AdoptPost post = adoptPostRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("게시글 없음: " + id));
+        // enum 값 매핑
+        post.setStatus(AdoptPost.Status.valueOf(newStatus));
+        // 변경 감지(dirty-checking)로 자동 저장
+        return AdoptPostResponse.from(post);
+    }
 }
 

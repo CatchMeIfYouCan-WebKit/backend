@@ -26,5 +26,15 @@ public class WebConfig implements WebMvcConfigurer {
             .allowedOrigins("http://localhost:5173")
             .exposedHeaders("Content-Type", "Content-Length");
 
+        // ← 여기부터 추가된 부분입니다 →
+        // 2) /api/** 전체에 대해 React(5173)에서 오는 모든 메서드 허용
+        registry.addMapping("/api/**")
+            .allowedOrigins("http://localhost:5173")
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .allowedHeaders("*")
+            .allowCredentials(true);
+
     }
+
+
 }
