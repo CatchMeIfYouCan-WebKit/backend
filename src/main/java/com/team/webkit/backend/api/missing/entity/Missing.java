@@ -2,17 +2,7 @@ package com.team.webkit.backend.api.missing.entity;
 
 import com.team.webkit.backend.api.member.entity.Member;
 import com.team.webkit.backend.api.pet.entity.Pet;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
@@ -48,7 +38,7 @@ public class Missing {
     @JoinColumn(name = "user_id")
     private Member member;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY) // 또는 EAGER
     @JoinColumn(name = "pet_id")
     private Pet pet;
 
@@ -78,6 +68,21 @@ public class Missing {
     @Column(name = "updated_at")
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+//위도 경도 추가(예찬)
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
+
+    @Transient
+    private String predictedBreed;
+
+    @Transient
+    private String predictedColor;
+
+
 
     public List<String> getPhotoUrls() {
         if (photoUrl == null || photoUrl.isEmpty()) {

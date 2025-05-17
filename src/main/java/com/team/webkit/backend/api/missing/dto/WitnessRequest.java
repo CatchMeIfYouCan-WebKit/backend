@@ -12,4 +12,6 @@ public class WitnessRequest {
     public LocalDateTime witnessDatetime;
     public String witnessLocation;
     public String detailDescription;
+    public Double latitude;
+    public Double longitude;
 }

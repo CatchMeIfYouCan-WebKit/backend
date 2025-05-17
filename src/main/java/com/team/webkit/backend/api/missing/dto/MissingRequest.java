@@ -12,4 +12,6 @@ public class MissingRequest {
     public LocalDateTime missingDatetime;
     public String missingLocation;
     public String detailDescription;
+    private Double latitude;
+    private Double longitude;
 }

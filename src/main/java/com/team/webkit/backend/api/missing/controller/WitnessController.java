@@ -1,13 +1,17 @@
 package com.team.webkit.backend.api.missing.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.team.webkit.backend.api.missing.dto.MissingResponse;
 import com.team.webkit.backend.api.missing.dto.WitnessRequest;
 import com.team.webkit.backend.api.missing.dto.WitnessResponse;
 import com.team.webkit.backend.api.missing.service.WitnessService;
 import com.team.webkit.backend.support.FileService;
 import com.team.webkit.backend.support.annotation.MSP;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,25 +46,26 @@ public class WitnessController {
     // 목격 등록
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, Object>> createWitness(
-        @RequestPart("post") String witnessJson,
-        @RequestPart(value = "files", required = false) List<MultipartFile> files
+            @RequestPart("post") String witnessJson,
+            @RequestPart(value = "photoUrls", required = false) String photoUrlsJson // 🔄 경로만 받음
     ) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         WitnessRequest request = mapper.readValue(witnessJson, WitnessRequest.class);
 
         String representativePhoto = null;
-        if (files != null && !files.isEmpty()) {
-            List<String> paths = files.stream()
-                .map(fileService::save)
-                .toList();
+        List<String> paths = new ArrayList<>();
+
+        if (photoUrlsJson != null && !photoUrlsJson.isEmpty()) {
+            // 🔄 JSON 배열 형태로 넘어온 문자열을 리스트로 변환
+            paths = mapper.readValue(photoUrlsJson, new TypeReference<List<String>>() {});
             request.setPhotoUrls(paths);
-            representativePhoto = paths.get(0); // 첫 번째 이미지 대표
+            representativePhoto = paths.get(0); // 첫 번째 이미지를 대표로 설정
         }
 
         WitnessResponse response = witnessService.createWitness(request);
 
-        // AI 예측 호출: 대표 이미지가 있을 때만
+        // ✅ AI 예측 호출
         if (representativePhoto != null) {
             try {
                 HttpHeaders headers = new HttpHeaders();
@@ -73,8 +78,7 @@ public class WitnessController {
                 HttpEntity<Map<String, Object>> entity = new HttpEntity<>(aiReq, headers);
                 restTemplate.postForEntity(AI_PREDICT_URL, entity, String.class);
             } catch (Exception e) {
-                // 로깅 처리 (예측 실패해도 게시글 등록은 정상)
-
+                // 예측 실패해도 무시
             }
         }
 
@@ -85,6 +89,7 @@ public class WitnessController {
 
         return ResponseEntity.ok(result);
     }
+
 
     // 이미지 업로드
     @CrossOrigin(origins = "http://10.0.2.2:5173")
@@ -120,4 +125,13 @@ public class WitnessController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    // 추천 실종글 조회 (AI 기반)
+    @GetMapping("/{id}/recommendations")
+    public ResponseEntity<List<WitnessResponse>> getRecommendedMissingPosts(@PathVariable Long id) {
+        List<WitnessResponse> recommended = witnessService.getRecommendedMissingPosts(id);
+        return ResponseEntity.ok(recommended);
+    }
+
+
 }

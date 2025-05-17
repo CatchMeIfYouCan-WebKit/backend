@@ -3,6 +3,8 @@ package com.team.webkit.backend.api.missing.repository;
 import com.team.webkit.backend.api.missing.entity.Missing;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface MissingRepository extends JpaRepository<Missing, Long> {
 
@@ -26,5 +28,8 @@ public interface MissingRepository extends JpaRepository<Missing, Long> {
     List<Missing> findByPostTypeAndPetCoatColor(String postType, String coatColor);
 
     List<Missing> findByPostTypeOrderByCreatedAtDesc(String postType);
+
+    @Query("SELECT m FROM Missing m LEFT JOIN FETCH m.pet WHERE m.id IN :ids")
+    List<Missing> findAllWithPetByIdIn(@Param("ids") List<Long> ids);
 
 }

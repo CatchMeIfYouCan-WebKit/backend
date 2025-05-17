@@ -1,5 +1,7 @@
 package com.team.webkit.backend.api.missing.service;
 
+import com.team.webkit.backend.api.ai.entity.AiPrediction;
+import com.team.webkit.backend.api.ai.repository.AiPredictionRepository;
 import com.team.webkit.backend.api.comment.repository.CommentRepository;
 import com.team.webkit.backend.api.member.repository.MemberRepository;
 import com.team.webkit.backend.api.missing.dto.MissingRequest;
@@ -7,14 +9,21 @@ import com.team.webkit.backend.api.missing.dto.MissingResponse;
 import com.team.webkit.backend.api.missing.entity.Missing;
 import com.team.webkit.backend.api.missing.entity.Missing.PostType;
 import com.team.webkit.backend.api.missing.repository.MissingRepository;
+import com.team.webkit.backend.api.pet.entity.Pet;
 import com.team.webkit.backend.api.pet.repository.PetRepository;
+
+import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import static java.awt.geom.Point2D.distance;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +34,7 @@ public class MissingService {
     private final MemberRepository memberRepository;
     private final PetRepository petRepository;
     private final CommentRepository commentRepository;
+    private final AiPredictionRepository aiPredictionRepository;
 
     // 실종 등록
     public MissingResponse createMissing(MissingRequest req) {
@@ -54,6 +64,9 @@ public class MissingService {
         post.setMissingDatetime(req.missingDatetime);
         post.setMissingLocation(req.missingLocation);
         post.setDetailDescription(req.detailDescription);
+        post.setLatitude(req.getLatitude());
+        post.setLongitude(req.getLongitude());
+
 
         Missing saved = missingRepository.save(post);
 
@@ -156,6 +169,85 @@ public class MissingService {
             .map(MissingResponse::from)
             .collect(Collectors.toList());
     }
+
+
+    //ai 목격 필터링 비즈니스 로직
+    public List<MissingResponse> getRecommendedWitnessPosts(Long missingPostId) {
+        Missing missing = missingRepository.findById(missingPostId)
+                .orElseThrow(() -> new RuntimeException("실종 게시글이 존재하지 않습니다."));
+
+        if (missing.getPostType() == Missing.PostType.missing && missing.getPet() == null) {
+            throw new IllegalStateException("실종 게시글에는 반려동물 정보가 필요합니다.");
+        }
+
+        String breed = missing.getPet().getBreed();
+        String coatColor = missing.getPet().getCoatColor();
+        LocalDateTime cutoff = missing.getMissingDatetime().minusDays(3);
+        double baseLat = missing.getLatitude();
+        double baseLon = missing.getLongitude();
+
+        // 1. AI 예측 정보에서 해당 조건에 맞는 witness postId 찾기
+        List<Long> witnessPostIds = aiPredictionRepository.findMatchingWitnessPostIds(
+                breed, coatColor, cutoff
+        );
+        System.out.println("🔥 예측된 witnessPostIds: " + witnessPostIds);
+
+        // 2. 추천 대상 witness 게시글 조회
+        List<Missing> witnessPosts = missingRepository.findAllWithPetByIdIn(witnessPostIds)
+                .stream()
+                .filter(post -> post.getPostType() == Missing.PostType.witness)
+                .collect(Collectors.toList());
+
+        // ✅ 각 추천글에 해당하는 AI 예측값 가져오기
+        Map<Long, AiPrediction> predictionMap = aiPredictionRepository
+                .findAllByPostIdIn(witnessPostIds)
+                .stream()
+                .collect(Collectors.toMap(AiPrediction::getPostId, p -> p));
+
+        for (Missing post : witnessPosts) {
+            AiPrediction ai = predictionMap.get(post.getId());
+            if (ai != null) {
+                post.setPredictedBreed(ai.getPredictedBreed());
+                post.setPredictedColor(ai.getPredictedColor());
+            }
+        }
+
+        // 3. 거리순 정렬
+        List<Missing> sorted = witnessPosts.stream()
+                .sorted(Comparator.comparingDouble(p -> distance(baseLat, baseLon, p.getLatitude(), p.getLongitude())))
+                .toList();
+
+        // 4. 디버깅 로그
+        System.out.println("✅ 최종 추천 대상 수: " + sorted.size());
+        sorted.forEach(p -> {
+            System.out.println("📌 추천 postId: " + p.getId());
+            System.out.println("📌 AI 품종: " + p.getPredictedBreed());
+            System.out.println("📌 AI 털색: " + p.getPredictedColor());
+            System.out.println("📌 위도/경도: " + p.getLatitude() + ", " + p.getLongitude());
+        });
+
+        // 5. DTO 변환
+        return sorted.stream()
+                .map(p -> {
+                    double dist = distance(baseLat, baseLon, p.getLatitude(), p.getLongitude());
+                    return MissingResponse.from(p, dist);
+                })
+                .toList();
+    }
+    private double distance(double lat1, double lon1, double lat2, double lon2) {
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.pow(Math.sin(dLat / 2), 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                        Math.pow(Math.sin(dLon / 2), 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double earthRadius = 6371; // km
+        return earthRadius * c;
+    }
+
+
+
+
 
 
 }

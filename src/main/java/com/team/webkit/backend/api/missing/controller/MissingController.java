@@ -85,4 +85,10 @@ public class MissingController {
         List<MissingResponse> result = missingService.findMissingPostsByFilter(breed, coatColor);
         return ResponseEntity.ok(result);
     }
+    //추천 목격글 조회
+    @GetMapping("/{id}/recommendations")
+    public ResponseEntity<List<MissingResponse>> getRecommendedWitnessPosts(@PathVariable Long id) {
+        List<MissingResponse> recommended = missingService.getRecommendedWitnessPosts(id);
+        return ResponseEntity.ok(recommended);
+    }
 }

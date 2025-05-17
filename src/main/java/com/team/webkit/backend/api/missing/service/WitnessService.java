@@ -1,5 +1,7 @@
 package com.team.webkit.backend.api.missing.service;
 
+import com.team.webkit.backend.api.ai.entity.AiPrediction;
+import com.team.webkit.backend.api.ai.repository.AiPredictionRepository;
 import com.team.webkit.backend.api.comment.repository.CommentRepository;
 import com.team.webkit.backend.api.member.repository.MemberRepository;
 import com.team.webkit.backend.api.missing.dto.WitnessRequest;
@@ -8,7 +10,11 @@ import com.team.webkit.backend.api.missing.entity.Missing;
 import com.team.webkit.backend.api.missing.entity.Missing.PostType;
 import com.team.webkit.backend.api.missing.repository.MissingRepository;
 import com.team.webkit.backend.api.pet.repository.PetRepository;
+
+import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +30,7 @@ public class WitnessService {
     private final MemberRepository memberRepository;
     private final PetRepository petRepository;
     private final CommentRepository commentRepository;
+    private final AiPredictionRepository aiPredictionRepository;
 
     // 목격 등록
     public WitnessResponse createWitness(WitnessRequest req) {
@@ -48,6 +55,9 @@ public class WitnessService {
         post.setMissingDatetime(req.witnessDatetime);
         post.setMissingLocation(req.witnessLocation);
         post.setDetailDescription(req.detailDescription);
+        post.setLatitude(req.latitude);
+        post.setLongitude(req.longitude);
+
 
         Missing saved = missingRepository.save(post);
         log.info("목격 게시글 등록 완료 (ID: {})", saved.getId());
@@ -96,6 +106,59 @@ public class WitnessService {
         missingRepository.delete(post);
         log.info("목격 게시글 삭제 성공 (ID: {})", id);
     }
+
+    //실종 게시글 추천
+    public List<WitnessResponse> getRecommendedMissingPosts(Long witnessPostId) {
+        Missing witness = missingRepository.findById(witnessPostId)
+                .orElseThrow(() -> new RuntimeException("목격 게시글이 존재하지 않습니다."));
+
+        if (witness.getPostType() != Missing.PostType.witness) {
+            throw new IllegalArgumentException("해당 게시글은 목격 게시글이 아닙니다.");
+        }
+
+        double baseLat = witness.getLatitude();
+        double baseLon = witness.getLongitude();
+        LocalDateTime cutoff = witness.getMissingDatetime().minusDays(3);
+
+        // ✅ AI 예측 정보 가져오기
+        AiPrediction prediction = aiPredictionRepository.findByPostId(witnessPostId)
+                .orElseThrow(() -> new RuntimeException("AI 예측 정보가 없습니다."));
+
+        List<Long> missingIds = aiPredictionRepository.findMatchingMissingPostIds(
+                prediction.getPredictedBreed(), prediction.getPredictedColor(), cutoff
+        );
+
+        // ✅ 실종 게시글 가져오기 및 AI 예측값 매핑
+        Map<Long, AiPrediction> predictionMap = aiPredictionRepository.findAllByPostIdIn(missingIds).stream()
+                .collect(Collectors.toMap(AiPrediction::getPostId, p -> p));
+
+        List<Missing> sorted = missingRepository.findAllWithPetByIdIn(missingIds).stream()
+                .filter(p -> p.getPostType() == Missing.PostType.missing)
+                .peek(p -> {
+                    AiPrediction ai = predictionMap.get(p.getId());
+                    if (ai != null) {
+                        p.setPredictedBreed(ai.getPredictedBreed());
+                        p.setPredictedColor(ai.getPredictedColor());
+                    }
+                })
+                .sorted(Comparator.comparingDouble(p -> distance(baseLat, baseLon, p.getLatitude(), p.getLongitude())))
+                .toList();
+
+        return sorted.stream()
+                .map(p -> WitnessResponse.from(p, distance(baseLat, baseLon, p.getLatitude(), p.getLongitude())))
+                .toList();
+    }
+
+    private double distance(double lat1, double lon1, double lat2, double lon2) {
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.pow(Math.sin(dLat / 2), 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                        Math.pow(Math.sin(dLon / 2), 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return 6371 * c;
+    }
+
 
 
 }
