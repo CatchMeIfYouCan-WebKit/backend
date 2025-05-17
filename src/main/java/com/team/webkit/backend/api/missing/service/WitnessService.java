@@ -29,7 +29,6 @@ public class WitnessService {
 
     private final MissingRepository missingRepository;
     private final MemberRepository memberRepository;
-    private final PetRepository petRepository;
     private final CommentRepository commentRepository;
     private final AiPredictionRepository aiPredictionRepository;
 
