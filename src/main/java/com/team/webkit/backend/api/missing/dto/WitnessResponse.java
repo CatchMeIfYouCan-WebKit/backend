@@ -1,4 +1,5 @@
-package com.team.webkit.backend.api.missing.dto;
+
+    package com.team.webkit.backend.api.missing.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.team.webkit.backend.api.missing.entity.Missing;
@@ -65,7 +66,11 @@ public class WitnessResponse {
             res.petName = post.getPet().getName();
             res.petBreed = post.getPet().getBreed();
             res.petCoatColor = post.getPet().getCoatColor();
+        } else if (post.getPostType() == Missing.PostType.witness) {
+            res.petBreed = post.getPredictedBreed();
+            res.petCoatColor = post.getPredictedColor();
         }
+
 
         return res;
     }
@@ -79,4 +84,9 @@ public class WitnessResponse {
 
         return res;
     }
+
+    public void setCommentCount(int commentCount) {
+        this.commentCount = commentCount;
+    }
 }
+

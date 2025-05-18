@@ -1,4 +1,5 @@
-package com.team.webkit.backend.api.missing.entity;
+
+    package com.team.webkit.backend.api.missing.entity;
 
 import com.team.webkit.backend.api.member.entity.Member;
 import com.team.webkit.backend.api.pet.entity.Pet;
@@ -46,6 +47,7 @@ public class Missing {
         missing, witness
     }
 
+
     @Column(name = "photo_url")
     private String photoUrl;
 
@@ -69,17 +71,17 @@ public class Missing {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-//위도 경도 추가(예찬)
+    //위도 경도 추가(예찬)
     @Column(name = "latitude")
     private Double latitude;
 
     @Column(name = "longitude")
     private Double longitude;
 
-    @Transient
+    @Column(name = "predicted_breed")
     private String predictedBreed;
 
-    @Transient
+    @Column(name = "predicted_color")
     private String predictedColor;
 
 

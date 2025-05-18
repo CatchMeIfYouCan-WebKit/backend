@@ -1,4 +1,5 @@
-package com.team.webkit.backend.api.missing.repository;
+
+    package com.team.webkit.backend.api.missing.repository;
 
 import com.team.webkit.backend.api.missing.entity.Missing;
 import java.util.List;
@@ -28,6 +29,20 @@ public interface MissingRepository extends JpaRepository<Missing, Long> {
     List<Missing> findByPostTypeAndPetCoatColor(String postType, String coatColor);
 
     List<Missing> findByPostTypeOrderByCreatedAtDesc(String postType);
+
+    List<Missing> findByPostTypeAndPredictedBreedAndPredictedColor(
+        Missing.PostType postType, String predictedBreed, String predictedColor
+    );
+
+    List<Missing> findByPostTypeAndPredictedBreed(
+        Missing.PostType postType, String predictedBreed
+    );
+
+    List<Missing> findByPostTypeAndPredictedColor(
+        Missing.PostType postType, String predictedColor
+    );
+
+    List<Missing> findByPostTypeOrderByCreatedAtDesc(Missing.PostType postType);
 
     @Query("SELECT m FROM Missing m LEFT JOIN FETCH m.pet WHERE m.id IN :ids")
     List<Missing> findAllWithPetByIdIn(@Param("ids") List<Long> ids);
